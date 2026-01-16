@@ -169,27 +169,27 @@ with expense_analytics_tab:
         df = pd.DataFrame(records)
         df.columns = df.columns.str.strip().str.lower()
 
-        df["datetime"] = pd.to_datetime(df.iloc[:, 0], format="%d/%m/%Y %H:%M")
-        df["date"] = df["datetime"].dt.date
-        df["week"] = df["datetime"].dt.to_period("W").astype(str)
-        df["month"] = df["datetime"].dt.to_period("M").astype(str)
-        df["amount"] = pd.to_numeric(df.iloc[:, 3])
+        df["date & time"] = pd.to_datetime(df.iloc[:, 0], format="%d/%m/%Y %H:%M")
+        df["date"] = df["date & time"].dt.date
+        df["week"] = df["date & time"].dt.to_period("W").astype(str)
+        df["month"] = df["date & time"].dt.to_period("M").astype(str)
+        df["Expense Amount"] = pd.to_numeric(df.iloc[:, 3])
 
-        st.metric("💰 Total Spend", f"₹ {df['amount'].sum():,.0f}")
+        st.metric("💰 Total Spend", f"₹ {df['Expense Amount'].sum():,.0f}")
 
         view = st.radio("View Expense Trend", ["Daily", "Weekly", "Monthly"], horizontal=True)
 
         if view == "Daily":
-            trend = df.groupby("date")["amount"].sum()
+            trend = df.groupby("date")["Expense Amount"].sum()
         elif view == "Weekly":
-            trend = df.groupby("week")["amount"].sum()
+            trend = df.groupby("week")["Expense Amount"].sum()
         else:
-            trend = df.groupby("month")["amount"].sum()
+            trend = df.groupby("month")["Expense Amount"].sum()
 
         st.line_chart(trend)
 
         st.markdown("### 📊 Top 5 Expense Categories")
-        top_categories = df.groupby(df.iloc[:, 1])["amount"].sum().nlargest(5)
+        top_categories = df.groupby(df.iloc[:, 1])["Expense Amount"].sum().nlargest(5)
         st.bar_chart(top_categories)
 
         avg_daily = df.groupby("date")["amount"].sum().mean()
@@ -210,23 +210,24 @@ with attendance_analytics_tab:
         df.columns = df.columns.str.strip().str.lower()
 
         df["absent_count"] = (
-            (df["morning"] == "✖").astype(int) +
-            (df["afternoon"] == "✖").astype(int) +
-            (df["night"] == "✖").astype(int)
+            (df["Morning"] == "✖").astype(int) +
+            (df["Afternoon"] == "✖").astype(int) +
+            (df["Night"] == "✖").astype(int)
         )
 
         st.markdown("### 📈 Day-wise Absentees Trend")
-        daily_absent = df.groupby("date")["absent_count"].sum()
+        daily_absent = df.groupby("Date")["absent_count"].sum()
         st.line_chart(daily_absent)
 
         st.markdown("### 🚨 Top 5 Absent Employees")
-        top_absent = df.groupby("employee_name")["absent_count"].sum().nlargest(5)
+        top_absent = df.groupby("Employee Name")["absent_count"].sum().nlargest(5)
         st.bar_chart(top_absent)
 
         st.markdown("### ❌ Absentees by Shift")
         shift_absent = {
-            "Morning": (df["morning"] == "✖").sum(),
-            "Afternoon": (df["afternoon"] == "✖").sum(),
-            "Night": (df["night"] == "✖").sum()
+            "Morning": (df["Morning"] == "✖").sum(),
+            "Afternoon": (df["Afternoon"] == "✖").sum(),
+            "Night": (df["Night"] == "✖").sum()
         }
         st.bar_chart(pd.Series(shift_absent))
+
