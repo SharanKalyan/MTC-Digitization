@@ -98,13 +98,15 @@ with st.form("expense_form"):
         [
             "Groceries",
             "Vegetables",
+            "Non-Veg"
             "Milk",
             "Banana Leaf",
             "Maintenance",
             "Electricity",
             "Rent",
             "Salary and Advance",
-            "Transportation"
+            "Transportation",
+            "Others",
         ]
     )
 
@@ -150,6 +152,7 @@ if submitted:
         st.success("Expense recorded successfully ✅")
 
 st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
