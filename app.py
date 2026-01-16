@@ -48,7 +48,7 @@ CREDS = ServiceAccountCredentials.from_json_keyfile_dict(
 
 client = gspread.authorize(CREDS)
 
-expense_sheet = client.open("MTC-Digitization").Sheet1
+expense_sheet = client.open("MTC-Digitization").worksheet("Expense")
 attendance_sheet = client.open("MTC-Digitization").worksheet("Attendance")
 
 # -----------------------------
@@ -199,6 +199,7 @@ with attendance_tab:
             ])
 
         st.success("Attendance saved successfully (previous entries overwritten) ✅")
+
 
 
 
