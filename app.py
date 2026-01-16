@@ -12,7 +12,7 @@ st.set_page_config(
     layout="centered"
 )
 
-st.title("🧾 Expense Entry")
+st.title("Expense Entry")
 
 # -----------------------------
 # Google Sheets Connection
@@ -109,4 +109,5 @@ if submitted:
         sheet.append_row(row)
 
         st.success("Expense recorded successfully ✅")
+
 
