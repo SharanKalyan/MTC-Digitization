@@ -21,16 +21,25 @@ st.set_page_config(
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
+# -----------------------------
+# PIN Protection
+# -----------------------------
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+
 if not st.session_state.authenticated:
     st.markdown("### 🔒 Enter PIN to Access")
 
-    pin_input = st.text_input(
-        "PIN",
-        type="password",
-        max_chars=6
-    )
+    with st.form("pin_form"):
+        pin_input = st.text_input(
+            "PIN",
+            type="password",
+            max_chars=6
+        )
 
-    if pin_input:
+        pin_submit = st.form_submit_button("➡️ Enter")
+
+    if pin_submit:
         if pin_input == st.secrets["security"]["app_pin"]:
             st.session_state.authenticated = True
             st.rerun()
@@ -38,6 +47,7 @@ if not st.session_state.authenticated:
             st.error("Incorrect PIN ❌")
 
     st.stop()
+
 
 
 # -----------------------------
@@ -140,6 +150,7 @@ if submitted:
         st.success("Expense recorded successfully ✅")
 
 st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
