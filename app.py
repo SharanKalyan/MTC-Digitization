@@ -32,7 +32,7 @@ def set_background(image_file):
         }}
 
         .content-box {{
-            background-color: rgba(255, 255, 255, 0.92);
+            background-color: rgba(255, 255, 255, 0.2);
             padding: 30px;
             border-radius: 14px;
             max-width: 600px;
@@ -146,3 +146,4 @@ if submitted:
         st.success("Expense recorded successfully ✅")
 
 st.markdown('</div>', unsafe_allow_html=True)
+
