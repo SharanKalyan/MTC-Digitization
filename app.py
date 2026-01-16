@@ -130,7 +130,7 @@ with expense_tab:
             st.success("Expense recorded successfully ✅")
 
 # =========================================================
-# 🧑‍🍳 ATTENDANCE TAB (MOBILE-OPTIMIZED)
+# 🧑‍🍳 ATTENDANCE TAB (SIMPLE & MOBILE-FIRST)
 # =========================================================
 with attendance_tab:
 
@@ -145,44 +145,35 @@ with attendance_tab:
 
     st.text_input("Date", value=today_date, disabled=True)
 
-    shift = st.radio(
-        "Select Shift",
-        ["Morning", "Afternoon", "Night"],
-        horizontal=True
-    )
+    st.markdown("### ❌ Morning Absentees")
+    morning_absent = {
+        emp: st.checkbox(emp, key=f"m_{emp}")
+        for emp in EMPLOYEES
+    }
 
-    st.markdown("### Tap to mark **Absent** (default = Present ✔)")
+    st.markdown("### ❌ Afternoon Absentees")
+    afternoon_absent = {
+        emp: st.checkbox(emp, key=f"a_{emp}")
+        for emp in EMPLOYEES
+    }
 
-    attendance_state = {}
-
-    for emp in EMPLOYEES:
-        attendance_state[emp] = st.toggle(
-            emp,
-            value=True,   # True = Present
-            key=f"{emp}_{shift}"
-        )
+    st.markdown("### ❌ Night Absentees")
+    night_absent = {
+        emp: st.checkbox(emp, key=f"n_{emp}")
+        for emp in EMPLOYEES
+    }
 
     if st.button("✅ Submit Attendance"):
 
         for emp in EMPLOYEES:
-            morning = "✔"
-            afternoon = "✔"
-            night = "✔"
-
-            if shift == "Morning":
-                morning = "✔" if attendance_state[emp] else "✖"
-            elif shift == "Afternoon":
-                afternoon = "✔" if attendance_state[emp] else "✖"
-            elif shift == "Night":
-                night = "✔" if attendance_state[emp] else "✖"
-
             attendance_sheet.append_row([
                 today_date,
                 emp,
-                morning,
-                afternoon,
-                night,
+                "✖" if morning_absent[emp] else "✔",
+                "✖" if afternoon_absent[emp] else "✔",
+                "✖" if night_absent[emp] else "✔",
                 formatted_time
             ])
 
-        st.success(f"{shift} attendance recorded successfully ✅")
+        st.success("Attendance recorded successfully ✅")
+
