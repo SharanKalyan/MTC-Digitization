@@ -137,7 +137,7 @@ with attendance_tab:
 
     st.markdown("## 🧑‍🍳 Employee Attendance")
 
-    EMPLOYEES = ["RK", "AR", "YS"]
+    EMPLOYEES = ["Vinoth", "Ravi", "Mani", "Ansari", "Kumar", "Hari", "Samuthuram", "Ramesh", "Punitha", "Vembu", "Devi", "Babu", "Latha","Indhra","Ambiga","RY","YS","Poosari","Balaji"]
 
     st.text_input("Date", value=today_date, disabled=True)
 
@@ -159,3 +159,4 @@ with attendance_tab:
             ])
 
         st.success("Attendance recorded successfully ✅")
+
