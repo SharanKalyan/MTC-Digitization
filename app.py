@@ -224,11 +224,12 @@ with attendance_analytics_tab:
         st.metric("👥 Total Employees", df["Employee Name"].nunique())
 
         absents = {
-            "Morning": (df["morning"] == "✖").sum(),
-            "Afternoon": (df["afternoon"] == "✖").sum(),
-            "Night": (df["night"] == "✖").sum()
+            "Morning": (df["Morning"] == "✖").sum(),
+            "Afternoon": (df["Afternoon"] == "✖").sum(),
+            "Night": (df["Night"] == "✖").sum()
         }
 
         st.markdown("### ❌ Absentees by Shift")
         st.bar_chart(pd.Series(absents))
+
 
