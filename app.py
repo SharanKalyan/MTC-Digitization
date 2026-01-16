@@ -192,7 +192,7 @@ with expense_analytics_tab:
         top_categories = df.groupby(df.iloc[:, 1])["Expense Amount"].sum().nlargest(5)
         st.bar_chart(top_categories)
 
-        avg_daily = df.groupby("date")["amount"].sum().mean()
+        avg_daily = df.groupby("date")["Expense Amount"].sum().mean()
         st.metric("📉 Avg Daily Spend", f"₹ {avg_daily:,.0f}")
 
 # =========================================================
@@ -230,4 +230,5 @@ with attendance_analytics_tab:
             "Night": (df["Night"] == "✖").sum()
         }
         st.bar_chart(pd.Series(shift_absent))
+
 
