@@ -1,7 +1,7 @@
 import streamlit as st
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-from datetime import datetime, time
+from datetime import datetime
 import pytz
 
 # -----------------------------
@@ -52,7 +52,7 @@ expense_sheet = client.open("MTC-Digitization").sheet1
 attendance_sheet = client.open("MTC-Digitization").worksheet("Attendance")
 
 # -----------------------------
-# Time Handling (IST)
+# Time Handling (IST – reference only)
 # -----------------------------
 ist = pytz.timezone("Asia/Kolkata")
 now = datetime.now(ist)
@@ -63,7 +63,7 @@ now = datetime.now(ist)
 expense_tab, attendance_tab = st.tabs(["🧾 Expense", "🧑‍🍳 Attendance"])
 
 # =========================================================
-# 🧾 EXPENSE TAB (EDITABLE DATE + TIME)
+# 🧾 EXPENSE TAB (EDITABLE DATE + TIME – FIXED)
 # =========================================================
 with expense_tab:
 
@@ -81,10 +81,11 @@ with expense_tab:
             value=now.time().replace(second=0, microsecond=0)
         )
 
+        # ✅ FIX: NO timezone conversion here
         selected_datetime = datetime.combine(
             expense_date,
             expense_time
-        ).astimezone(ist)
+        )
 
         formatted_expense_time = selected_datetime.strftime("%d/%m/%Y %H:%M")
 
@@ -143,7 +144,7 @@ with expense_tab:
             st.success("Expense recorded successfully ✅")
 
 # =========================================================
-# 🧑‍🍳 ATTENDANCE TAB (BACKDATED + OVERWRITE)
+# 🧑‍🍳 ATTENDANCE TAB (BACKDATED + OVERWRITE – CORRECT)
 # =========================================================
 with attendance_tab:
 
@@ -175,18 +176,18 @@ with attendance_tab:
 
     if st.button("✅ Submit Attendance"):
 
-        # --- DELETE EXISTING RECORDS FOR SELECTED DATE ---
+        # Delete existing records for selected date
         all_rows = attendance_sheet.get_all_values()
         rows_to_delete = []
 
-        for idx, row in enumerate(all_rows[1:], start=2):  # skip header
+        for idx, row in enumerate(all_rows[1:], start=2):
             if row[0] == attendance_date_str:
                 rows_to_delete.append(idx)
 
         for row_idx in reversed(rows_to_delete):
             attendance_sheet.delete_rows(row_idx)
 
-        # --- INSERT NEW RECORDS ---
+        # Insert new records
         for emp in EMPLOYEES:
             attendance_sheet.append_row([
                 attendance_date_str,
