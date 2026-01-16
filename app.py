@@ -60,7 +60,7 @@ now = datetime.now(ist)
 # -----------------------------
 # Tabs
 # -----------------------------
-expense_tab, attendance_tab = st.tabs(["🧾 Expense", "🧑‍🍳 Attendance"])
+expense_tab, attendance_tab = st.tabs(["💸 Expense", "🧑‍🍳 Attendance"])
 
 # =========================================================
 # 🧾 EXPENSE TAB (EDITABLE DATE + TIME – FIXED)
@@ -199,4 +199,5 @@ with attendance_tab:
             ])
 
         st.success("Attendance saved successfully (previous entries overwritten) ✅")
+
 
