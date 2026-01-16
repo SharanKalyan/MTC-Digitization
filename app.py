@@ -5,6 +5,8 @@ from datetime import datetime
 import pytz
 import base64
 
+
+
 # -----------------------------
 # Page Configuration
 # -----------------------------
@@ -12,6 +14,30 @@ st.set_page_config(
     page_title="Restaurant Expense Entry",
     layout="centered"
 )
+
+# -----------------------------
+# PIN Protection
+# -----------------------------
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+
+if not st.session_state.authenticated:
+    st.markdown("### 🔒 Enter PIN to Access")
+
+    pin_input = st.text_input(
+        "PIN",
+        type="password",
+        max_chars=6
+    )
+
+    if pin_input:
+        if pin_input == st.secrets["security"]["app_pin"]:
+            st.session_state.authenticated = True
+            st.rerun()
+        else:
+            st.error("Incorrect PIN ❌")
+
+    st.stop()
 
 
 # -----------------------------
@@ -114,6 +140,7 @@ if submitted:
         st.success("Expense recorded successfully ✅")
 
 st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
