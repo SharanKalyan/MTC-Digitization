@@ -131,11 +131,11 @@ with expense_tab:
             st.success("Expense recorded successfully ✅")
 
 # =========================================================
-# 🧑‍🍳 ATTENDANCE TAB
+# 🧑‍🍳 ATTENDANCE TAB (MOBILE FRIENDLY)
 # =========================================================
 with attendance_tab:
 
-    st.markdown("## 🧑‍🍳 Employee Attendance (Shift-wise)")
+    st.markdown("## 🧑‍🍳 Employee Attendance")
 
     EMPLOYEES = [
         "Vinoth", "Ravi", "Mani", "Ansari", "Kumar", "Hari",
@@ -144,49 +144,43 @@ with attendance_tab:
         "Poosari", "Balaji"
     ]
 
-    SHIFTS = ["Morning", "Afternoon", "Night"]
-
     st.text_input("Date", value=today_date, disabled=True)
 
-    st.markdown("### ❌ Mark absentees only")
+    shift = st.radio(
+        "Select Shift",
+        ["Morning", "Afternoon", "Night"],
+        horizontal=True
+    )
 
-    # Store checkbox states
-    attendance_data = {}
+    st.markdown("### ❌ Select absentees only")
 
-    # Header row
-    cols = st.columns([2, 1, 1, 1])
-    cols[0].markdown("**Employee**")
-    for i, shift in enumerate(SHIFTS):
-        cols[i + 1].markdown(f"**{shift}**")
+    absentees = st.multiselect(
+        "Employees",
+        EMPLOYEES
+    )
 
-    # Employee rows
-    for emp in EMPLOYEES:
-        cols = st.columns([2, 1, 1, 1])
-        cols[0].markdown(emp)
-
-        attendance_data[emp] = {}
-
-        for i, shift in enumerate(SHIFTS):
-            attendance_data[emp][shift] = cols[i + 1].checkbox(
-                "",
-                key=f"{emp}_{shift}"
-            )
-
-    # Submit attendance
     if st.button("✅ Submit Attendance"):
 
         for emp in EMPLOYEES:
-            for shift in SHIFTS:
-                status = "Absent" if attendance_data[emp][shift] else "Present"
+            morning = "✔"
+            afternoon = "✔"
+            night = "✔"
 
-                attendance_sheet.append_row([
-                    today_date,
-                    emp,
-                    shift,
-                    status,
-                    formatted_time
-                ])
+            if shift == "Morning" and emp in absentees:
+                morning = "✖"
+            if shift == "Afternoon" and emp in absentees:
+                afternoon = "✖"
+            if shift == "Night" and emp in absentees:
+                night = "✖"
 
-        st.success("Attendance recorded successfully for all shifts ✅")
+            attendance_sheet.append_row([
+                today_date,
+                emp,
+                morning,
+                afternoon,
+                night,
+                formatted_time
+            ])
 
+        st.success(f"{shift} attendance recorded successfully ✅")
 
