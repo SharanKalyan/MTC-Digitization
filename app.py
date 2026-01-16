@@ -9,10 +9,7 @@ import pytz
 # -----------------------------
 # Page Configuration
 # -----------------------------
-st.set_page_config(
-    page_title="Monisha Tiffin Center",
-    layout="centered"
-)
+st.set_page_config(page_title="Monisha Tiffin Center", layout="centered")
 
 # -----------------------------
 # PIN Protection
@@ -22,18 +19,16 @@ if "authenticated" not in st.session_state:
 
 if not st.session_state.authenticated:
     st.markdown("### 🔒 Enter PIN to Access")
-
     with st.form("pin_form"):
         pin_input = st.text_input("PIN", type="password", max_chars=6)
-        pin_submit = st.form_submit_button("➡️ Enter")
+        submit = st.form_submit_button("➡️ Enter")
 
-    if pin_submit:
+    if submit:
         if pin_input == st.secrets["security"]["app_pin"]:
             st.session_state.authenticated = True
             st.rerun()
         else:
             st.error("Incorrect PIN ❌")
-
     st.stop()
 
 # -----------------------------
@@ -55,7 +50,7 @@ expense_sheet = spreadsheet.sheet1
 attendance_sheet = spreadsheet.worksheet("Attendance")
 
 # -----------------------------
-# Time Handling (IST reference)
+# Time Handling
 # -----------------------------
 ist = pytz.timezone("Asia/Kolkata")
 now = datetime.now(ist)
@@ -75,18 +70,12 @@ with expense_tab:
     st.markdown("## 🧾 Expense Entry")
 
     with st.form("expense_form"):
-
-        expense_date = st.date_input(
-            "Expense Date",
-            value=now.date()
-        )
-
+        expense_date = st.date_input("Expense Date", value=now.date())
         expense_time = st.time_input(
             "Expense Time",
             value=now.time().replace(second=0, microsecond=0)
         )
 
-        # IMPORTANT: no timezone conversion
         expense_datetime = datetime.combine(expense_date, expense_time)
         expense_datetime_str = expense_datetime.strftime("%d/%m/%Y %H:%M")
 
@@ -135,7 +124,7 @@ with attendance_tab:
     ]
 
     attendance_date = st.date_input("Attendance Date", value=now.date())
-    attendance_date_str = attendance_date.strftime("%d/%m/%Y")
+    date_str = attendance_date.strftime("%d/%m/%Y")
     entry_time = now.strftime("%d/%m/%Y %H:%M")
 
     st.markdown("### ❌ Morning Absentees")
@@ -149,16 +138,14 @@ with attendance_tab:
 
     if st.button("✅ Submit Attendance"):
 
-        # delete existing rows for that date
         rows = attendance_sheet.get_all_values()
-        delete_rows = [i for i, r in enumerate(rows[1:], start=2) if r[0] == attendance_date_str]
+        delete_rows = [i for i, r in enumerate(rows[1:], start=2) if r[0] == date_str]
         for i in reversed(delete_rows):
             attendance_sheet.delete_rows(i)
 
-        # insert fresh rows
         for e in EMPLOYEES:
             attendance_sheet.append_row([
-                attendance_date_str,
+                date_str,
                 e,
                 "✖" if m[e] else "✔",
                 "✖" if a[e] else "✔",
@@ -180,33 +167,33 @@ with expense_analytics_tab:
         st.info("No expense data available yet.")
     else:
         df = pd.DataFrame(records)
+        df.columns = df.columns.str.strip().str.lower()
 
         df["datetime"] = pd.to_datetime(df.iloc[:, 0], format="%d/%m/%Y %H:%M")
         df["date"] = df["datetime"].dt.date
+        df["week"] = df["datetime"].dt.to_period("W").astype(str)
+        df["month"] = df["datetime"].dt.to_period("M").astype(str)
         df["amount"] = pd.to_numeric(df.iloc[:, 3])
 
         st.metric("💰 Total Spend", f"₹ {df['amount'].sum():,.0f}")
 
-        st.markdown("### 📈 Daily Spend Trend")
-        daily = df.groupby("date")["amount"].sum()
-        st.line_chart(daily)
+        view = st.radio("View Expense Trend", ["Daily", "Weekly", "Monthly"], horizontal=True)
 
-        st.markdown("### 📊 Category-wise Spend")
-        category_spend = df.groupby(df.iloc[:, 1])["amount"].sum()
-        st.bar_chart(category_spend)
+        if view == "Daily":
+            trend = df.groupby("date")["amount"].sum()
+        elif view == "Weekly":
+            trend = df.groupby("week")["amount"].sum()
+        else:
+            trend = df.groupby("month")["amount"].sum()
 
-        st.markdown("### 💳 Payment Mode Split")
-        payment_spend = df.groupby(df.iloc[:, 4])["amount"].sum()
+        st.line_chart(trend)
 
-        fig, ax = plt.subplots()
-        ax.pie(
-            payment_spend,
-            labels=payment_spend.index,
-            autopct="%1.0f%%",
-            startangle=90
-        )
-        ax.axis("equal")
-        st.pyplot(fig)
+        st.markdown("### 📊 Top 5 Expense Categories")
+        top_categories = df.groupby(df.iloc[:, 1])["amount"].sum().nlargest(5)
+        st.bar_chart(top_categories)
+
+        avg_daily = df.groupby("date")["amount"].sum().mean()
+        st.metric("📉 Avg Daily Spend", f"₹ {avg_daily:,.0f}")
 
 # =========================================================
 # 📈 ATTENDANCE ANALYTICS
@@ -220,16 +207,26 @@ with attendance_analytics_tab:
         st.info("No attendance data available yet.")
     else:
         df = pd.DataFrame(records)
+        df.columns = df.columns.str.strip().str.lower()
 
-        st.metric("👥 Total Employees", df["Employee Name"].nunique())
+        df["absent_count"] = (
+            (df["morning"] == "✖").astype(int) +
+            (df["afternoon"] == "✖").astype(int) +
+            (df["night"] == "✖").astype(int)
+        )
 
-        absents = {
-            "Morning": (df["Morning"] == "✖").sum(),
-            "Afternoon": (df["Afternoon"] == "✖").sum(),
-            "Night": (df["Night"] == "✖").sum()
-        }
+        st.markdown("### 📈 Day-wise Absentees Trend")
+        daily_absent = df.groupby("date")["absent_count"].sum()
+        st.line_chart(daily_absent)
+
+        st.markdown("### 🚨 Top 5 Absent Employees")
+        top_absent = df.groupby("employee_name")["absent_count"].sum().nlargest(5)
+        st.bar_chart(top_absent)
 
         st.markdown("### ❌ Absentees by Shift")
-        st.bar_chart(pd.Series(absents))
-
-
+        shift_absent = {
+            "Morning": (df["morning"] == "✖").sum(),
+            "Afternoon": (df["afternoon"] == "✖").sum(),
+            "Night": (df["night"] == "✖").sum()
+        }
+        st.bar_chart(pd.Series(shift_absent))
