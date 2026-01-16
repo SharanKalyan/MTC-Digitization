@@ -37,7 +37,7 @@ def set_background(image_file):
             border-radius: 14px;
             max-width: 600px;
             margin: auto;
-            box-shadow: 0px 4px 20px rgba(0,0,0,0.15);
+            box-shadow: 0px 4px 20px rgba(0,0,0,0);
         }}
         </style>
         """,
@@ -146,4 +146,5 @@ if submitted:
         st.success("Expense recorded successfully ✅")
 
 st.markdown('</div>', unsafe_allow_html=True)
+
 
