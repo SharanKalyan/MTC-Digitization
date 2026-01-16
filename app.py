@@ -3,6 +3,7 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
 import pytz
+import base64
 
 # -----------------------------
 # Page Configuration
@@ -12,7 +13,49 @@ st.set_page_config(
     layout="centered"
 )
 
-st.title("Expense Entry")
+# -----------------------------
+# Background Image Function
+# -----------------------------
+def set_background(image_file):
+    with open(image_file, "rb") as f:
+        encoded = base64.b64encode(f.read()).decode()
+
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background-image: url("data:image/png;base64,{encoded}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }}
+
+        .content-box {{
+            background-color: rgba(255, 255, 255, 0.92);
+            padding: 30px;
+            border-radius: 14px;
+            max-width: 600px;
+            margin: auto;
+            box-shadow: 0px 4px 20px rgba(0,0,0,0.15);
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+set_background("landingpage.png")
+
+# -----------------------------
+# Title Section
+# -----------------------------
+st.markdown('<div class="content-box">', unsafe_allow_html=True)
+
+st.markdown(
+    "<h2 style='text-align:center;'>🍽️ Monisha Tiffin Center</h2>"
+    "<h4 style='text-align:center;'>Expense Entry</h4>",
+    unsafe_allow_html=True
+)
 
 # -----------------------------
 # Google Sheets Connection
@@ -28,11 +71,6 @@ CREDS = ServiceAccountCredentials.from_json_keyfile_dict(
 
 client = gspread.authorize(CREDS)
 sheet = client.open("MTC-Digitization").sheet1
-
-# sheets = client.openall()
-# st.write([s.title for s in sheets])
-
-
 
 # -----------------------------
 # IST Timestamp
@@ -68,7 +106,7 @@ with st.form("expense_form"):
 
     sub_category = st.text_input(
         "Sub-Category",
-        placeholder="e.g., Vegetables, repair Etc. "
+        placeholder="e.g., Vegetables, Repair, etc."
     )
 
     expense_amount = st.number_input(
@@ -93,7 +131,6 @@ with st.form("expense_form"):
 # Save to Google Sheets
 # -----------------------------
 if submitted:
-
     if expense_amount == 0:
         st.error("Expense amount must be greater than 0")
     else:
@@ -105,9 +142,7 @@ if submitted:
             payment_mode,
             expense_by
         ]
-
         sheet.append_row(row)
-
         st.success("Expense recorded successfully ✅")
 
-
+st.markdown('</div>', unsafe_allow_html=True)
