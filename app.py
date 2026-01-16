@@ -13,38 +13,6 @@ st.set_page_config(
     layout="centered"
 )
 
-# -----------------------------
-# Background Image Function
-# -----------------------------
-def set_background(image_file):
-    with open(image_file, "rb") as f:
-        encoded = base64.b64encode(f.read()).decode()
-
-    st.markdown(
-        f"""
-        <style>
-        .stApp {{
-            background-image: url("data:image/png;base64,{encoded}");
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-        }}
-
-        .content-box {{
-            background-color: rgba(255, 255, 255, 0.2);
-            padding: 30px;
-            border-radius: 14px;
-            max-width: 600px;
-            margin: auto;
-            box-shadow: 0px 4px 20px rgba(0,0,0,0);
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-set_background("landingpage.png")
 
 # -----------------------------
 # Title Section
@@ -146,5 +114,6 @@ if submitted:
         st.success("Expense recorded successfully ✅")
 
 st.markdown('</div>', unsafe_allow_html=True)
+
 
 
