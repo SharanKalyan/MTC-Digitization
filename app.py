@@ -135,28 +135,58 @@ with expense_tab:
 # =========================================================
 with attendance_tab:
 
-    st.markdown("## 🧑‍🍳 Employee Attendance")
+    st.markdown("## 🧑‍🍳 Employee Attendance (Shift-wise)")
 
-    EMPLOYEES = ["Vinoth", "Ravi", "Mani", "Ansari", "Kumar", "Hari", "Samuthuram", "Ramesh", "Punitha", "Vembu", "Devi", "Babu", "Latha","Indhra","Ambiga","RY","YS","Poosari","Balaji"]
+    EMPLOYEES = [
+        "Vinoth", "Ravi", "Mani", "Ansari", "Kumar", "Hari",
+        "Samuthuram", "Ramesh", "Punitha", "Vembu", "Devi",
+        "Babu", "Latha", "Indhra", "Ambiga", "RY", "YS",
+        "Poosari", "Balaji"
+    ]
+
+    SHIFTS = ["Morning", "Afternoon", "Night"]
 
     st.text_input("Date", value=today_date, disabled=True)
 
-    absentees = st.multiselect(
-        "Select absentees (leave empty if all are present)",
-        EMPLOYEES
-    )
+    st.markdown("### ❌ Mark absentees only")
 
+    # Store checkbox states
+    attendance_data = {}
+
+    # Header row
+    cols = st.columns([2, 1, 1, 1])
+    cols[0].markdown("**Employee**")
+    for i, shift in enumerate(SHIFTS):
+        cols[i + 1].markdown(f"**{shift}**")
+
+    # Employee rows
+    for emp in EMPLOYEES:
+        cols = st.columns([2, 1, 1, 1])
+        cols[0].markdown(emp)
+
+        attendance_data[emp] = {}
+
+        for i, shift in enumerate(SHIFTS):
+            attendance_data[emp][shift] = cols[i + 1].checkbox(
+                "",
+                key=f"{emp}_{shift}"
+            )
+
+    # Submit attendance
     if st.button("✅ Submit Attendance"):
 
         for emp in EMPLOYEES:
-            status = "Absent" if emp in absentees else "Present"
+            for shift in SHIFTS:
+                status = "Absent" if attendance_data[emp][shift] else "Present"
 
-            attendance_sheet.append_row([
-                today_date,
-                emp,
-                status,
-                formatted_time
-            ])
+                attendance_sheet.append_row([
+                    today_date,
+                    emp,
+                    shift,
+                    status,
+                    formatted_time
+                ])
 
-        st.success("Attendance recorded successfully ✅")
+        st.success("Attendance recorded successfully for all shifts ✅")
+
 
