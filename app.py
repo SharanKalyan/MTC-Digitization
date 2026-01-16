@@ -1,7 +1,7 @@
 import streamlit as st
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-from datetime import datetime
+from datetime import datetime, time
 import pytz
 
 # -----------------------------
@@ -52,12 +52,10 @@ expense_sheet = client.open("MTC-Digitization").sheet1
 attendance_sheet = client.open("MTC-Digitization").worksheet("Attendance")
 
 # -----------------------------
-# Time Handling
+# Time Handling (IST)
 # -----------------------------
 ist = pytz.timezone("Asia/Kolkata")
 now = datetime.now(ist)
-formatted_time = now.strftime("%d/%m/%Y %H:%M")
-today_date = now.strftime("%d/%m/%Y")
 
 # -----------------------------
 # Tabs
@@ -65,7 +63,7 @@ today_date = now.strftime("%d/%m/%Y")
 expense_tab, attendance_tab = st.tabs(["🧾 Expense", "🧑‍🍳 Attendance"])
 
 # =========================================================
-# 🧾 EXPENSE TAB (UNCHANGED)
+# 🧾 EXPENSE TAB (EDITABLE DATE + TIME)
 # =========================================================
 with expense_tab:
 
@@ -73,7 +71,22 @@ with expense_tab:
 
     with st.form("expense_form"):
 
-        st.text_input("Date & Time", value=formatted_time, disabled=True)
+        expense_date = st.date_input(
+            "Expense Date",
+            value=now.date()
+        )
+
+        expense_time = st.time_input(
+            "Expense Time",
+            value=now.time().replace(second=0, microsecond=0)
+        )
+
+        selected_datetime = datetime.combine(
+            expense_date,
+            expense_time
+        ).astimezone(ist)
+
+        formatted_expense_time = selected_datetime.strftime("%d/%m/%Y %H:%M")
 
         category = st.selectbox(
             "Category",
@@ -120,7 +133,7 @@ with expense_tab:
             st.error("Expense amount must be greater than 0")
         else:
             expense_sheet.append_row([
-                formatted_time,
+                formatted_expense_time,
                 category,
                 sub_category,
                 expense_amount,
@@ -130,7 +143,7 @@ with expense_tab:
             st.success("Expense recorded successfully ✅")
 
 # =========================================================
-# 🧑‍🍳 ATTENDANCE TAB (SIMPLE & MOBILE-FIRST)
+# 🧑‍🍳 ATTENDANCE TAB (BACKDATED + OVERWRITE)
 # =========================================================
 with attendance_tab:
 
@@ -143,37 +156,45 @@ with attendance_tab:
         "Poosari", "Balaji"
     ]
 
-    st.text_input("Date", value=today_date, disabled=True)
+    attendance_date = st.date_input(
+        "Attendance Date",
+        value=now.date()
+    )
+
+    attendance_date_str = attendance_date.strftime("%d/%m/%Y")
+    entry_time = datetime.now(ist).strftime("%d/%m/%Y %H:%M")
 
     st.markdown("### ❌ Morning Absentees")
-    morning_absent = {
-        emp: st.checkbox(emp, key=f"m_{emp}")
-        for emp in EMPLOYEES
-    }
+    morning_absent = {emp: st.checkbox(emp, key=f"m_{emp}") for emp in EMPLOYEES}
 
     st.markdown("### ❌ Afternoon Absentees")
-    afternoon_absent = {
-        emp: st.checkbox(emp, key=f"a_{emp}")
-        for emp in EMPLOYEES
-    }
+    afternoon_absent = {emp: st.checkbox(emp, key=f"a_{emp}") for emp in EMPLOYEES}
 
     st.markdown("### ❌ Night Absentees")
-    night_absent = {
-        emp: st.checkbox(emp, key=f"n_{emp}")
-        for emp in EMPLOYEES
-    }
+    night_absent = {emp: st.checkbox(emp, key=f"n_{emp}") for emp in EMPLOYEES}
 
     if st.button("✅ Submit Attendance"):
 
+        # --- DELETE EXISTING RECORDS FOR SELECTED DATE ---
+        all_rows = attendance_sheet.get_all_values()
+        rows_to_delete = []
+
+        for idx, row in enumerate(all_rows[1:], start=2):  # skip header
+            if row[0] == attendance_date_str:
+                rows_to_delete.append(idx)
+
+        for row_idx in reversed(rows_to_delete):
+            attendance_sheet.delete_rows(row_idx)
+
+        # --- INSERT NEW RECORDS ---
         for emp in EMPLOYEES:
             attendance_sheet.append_row([
-                today_date,
+                attendance_date_str,
                 emp,
                 "✖" if morning_absent[emp] else "✔",
                 "✖" if afternoon_absent[emp] else "✔",
                 "✖" if night_absent[emp] else "✔",
-                formatted_time
+                entry_time
             ])
 
-        st.success("Attendance recorded successfully ✅")
-
+        st.success("Attendance saved successfully (previous entries overwritten) ✅")
