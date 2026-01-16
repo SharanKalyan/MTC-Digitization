@@ -22,8 +22,8 @@ SCOPE = [
     "https://www.googleapis.com/auth/drive"
 ]
 
-CREDS = ServiceAccountCredentials.from_json_keyfile_name(
-    "service_account.json", SCOPE
+CREDS = ServiceAccountCredentials.from_json_keyfile_dict(
+    st.secrets["gcp_service_account"], SCOPE
 )
 
 client = gspread.authorize(CREDS)
@@ -109,3 +109,4 @@ if submitted:
         sheet.append_row(row)
 
         st.success("Expense recorded successfully ✅")
+
