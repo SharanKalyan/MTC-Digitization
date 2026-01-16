@@ -3,7 +3,6 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
 import pytz
-import base64
 
 # -----------------------------
 # Page Configuration
@@ -56,9 +55,9 @@ attendance_sheet = client.open("MTC-Digitization").worksheet("Attendance")
 # Time Handling
 # -----------------------------
 ist = pytz.timezone("Asia/Kolkata")
-current_time = datetime.now(ist)
-formatted_time = current_time.strftime("%d/%m/%Y %H:%M")
-today_date = current_time.strftime("%d/%m/%Y")
+now = datetime.now(ist)
+formatted_time = now.strftime("%d/%m/%Y %H:%M")
+today_date = now.strftime("%d/%m/%Y")
 
 # -----------------------------
 # Tabs
@@ -66,7 +65,7 @@ today_date = current_time.strftime("%d/%m/%Y")
 expense_tab, attendance_tab = st.tabs(["🧾 Expense", "🧑‍🍳 Attendance"])
 
 # =========================================================
-# 🧾 EXPENSE TAB
+# 🧾 EXPENSE TAB (UNCHANGED)
 # =========================================================
 with expense_tab:
 
@@ -131,7 +130,7 @@ with expense_tab:
             st.success("Expense recorded successfully ✅")
 
 # =========================================================
-# 🧑‍🍳 ATTENDANCE TAB (MOBILE FRIENDLY)
+# 🧑‍🍳 ATTENDANCE TAB (MOBILE-OPTIMIZED)
 # =========================================================
 with attendance_tab:
 
@@ -152,12 +151,16 @@ with attendance_tab:
         horizontal=True
     )
 
-    st.markdown("### ❌ Select absentees only")
+    st.markdown("### Tap to mark **Absent** (default = Present ✔)")
 
-    absentees = st.multiselect(
-        "Employees",
-        EMPLOYEES
-    )
+    attendance_state = {}
+
+    for emp in EMPLOYEES:
+        attendance_state[emp] = st.toggle(
+            emp,
+            value=True,   # True = Present
+            key=f"{emp}_{shift}"
+        )
 
     if st.button("✅ Submit Attendance"):
 
@@ -166,12 +169,12 @@ with attendance_tab:
             afternoon = "✔"
             night = "✔"
 
-            if shift == "Morning" and emp in absentees:
-                morning = "✖"
-            if shift == "Afternoon" and emp in absentees:
-                afternoon = "✖"
-            if shift == "Night" and emp in absentees:
-                night = "✖"
+            if shift == "Morning":
+                morning = "✔" if attendance_state[emp] else "✖"
+            elif shift == "Afternoon":
+                afternoon = "✔" if attendance_state[emp] else "✖"
+            elif shift == "Night":
+                night = "✔" if attendance_state[emp] else "✖"
 
             attendance_sheet.append_row([
                 today_date,
@@ -183,4 +186,3 @@ with attendance_tab:
             ])
 
         st.success(f"{shift} attendance recorded successfully ✅")
-
