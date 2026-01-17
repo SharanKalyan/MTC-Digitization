@@ -67,7 +67,8 @@ now = datetime.now(ist)
     sales_tab,
     expense_analytics_tab,
     attendance_analytics_tab,
-    sales_analytics_tab
+    sales_analytics_tab,
+    Today_summary_tab
 ) = st.tabs([
     "🧾 Expense",
     "🧑‍🍳 Attendance",
@@ -75,7 +76,7 @@ now = datetime.now(ist)
     "📊 Expense Analytics",
     "📈 Attendance Analytics",
     "📊 Sales Analytics"
-    "📊 Today_summary_tab"
+    "📊 Today's Summary"
 
 ])
 
@@ -298,6 +299,7 @@ with today_summary_tab:
         f"₹ {remaining_balance:,.0f}",
         delta=None
     )
+
 
 
 
