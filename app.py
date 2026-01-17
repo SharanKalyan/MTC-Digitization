@@ -156,9 +156,10 @@ with attendance_tab:
         st.success("Attendance saved successfully ✅")
 
 # =================================================
-# 💰 SALES TAB (NEW)
+# 💰 SALES TAB
 # =================================================
 with sales_tab:
+
     st.markdown("## 💰 Sales Entry")
 
     with st.form("sales_form"):
@@ -166,8 +167,23 @@ with sales_tab:
         sale_date_str = sale_date.strftime("%d-%m-%Y")
 
         store = st.selectbox("Store", ["Bigstreet", "Main", "Orders"])
-        time_slot = st.radio("Time Slot", ["Morning", "Night"], horizontal=True)
-        cash_total = st.number_input("Cash Total", min_value=0.0, step=100.0)
+
+        # Time Slot logic
+        if store == "Bigstreet":
+            time_slot = st.radio(
+                "Time Slot",
+                ["Morning", "Night"],
+                horizontal=True
+            )
+        else:
+            time_slot = "Full Day"
+            st.info("ℹ️ This store runs full day")
+
+        cash_total = st.number_input(
+            "Cash Total",
+            min_value=0.0,
+            step=100.0
+        )
 
         submit_sale = st.form_submit_button("✅ Submit Sales")
 
@@ -180,6 +196,7 @@ with sales_tab:
                 i for i, r in enumerate(rows[1:], start=2)
                 if r[0] == sale_date_str and r[1] == store and r[2] == time_slot
             ]
+
             for i in reversed(delete_rows):
                 sales_sheet.delete_rows(i)
 
@@ -190,7 +207,9 @@ with sales_tab:
                 cash_total,
                 now.strftime("%d/%m/%Y %H:%M")
             ])
+
             st.success("Sales recorded successfully ✅")
+
 
 # =================================================
 # 📊 SALES ANALYTICS (NEW)
@@ -217,6 +236,8 @@ with sales_analytics_tab:
         store_sales = df.groupby("Store")["Cash Total"].sum()
         st.bar_chart(store_sales)
 
-        st.markdown("### 🌙 Morning vs Night")
+        st.markdown("### ⏱ Sales by Time Slot")
         slot_sales = df.groupby("Time Slot")["Cash Total"].sum()
         st.bar_chart(slot_sales)
+
+
