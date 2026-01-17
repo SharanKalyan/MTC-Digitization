@@ -50,6 +50,7 @@ spreadsheet = client.open("MTC-Digitization")
 
 expense_sheet = spreadsheet.sheet1
 attendance_sheet = spreadsheet.worksheet("Attendance")
+sales_sheet = spreadsheet.worksheet("Sales")
 
 # -------------------------------------------------
 # Time Handling (IST)
@@ -60,37 +61,44 @@ now = datetime.now(ist)
 # -------------------------------------------------
 # Tabs
 # -------------------------------------------------
-expense_tab, attendance_tab, expense_analytics_tab, attendance_analytics_tab = st.tabs(
-    ["🧾 Expense", "🧑‍🍳 Attendance", "📊 Expense Analytics", "📈 Attendance Analytics"]
-)
+(
+    expense_tab,
+    attendance_tab,
+    sales_tab,
+    expense_analytics_tab,
+    attendance_analytics_tab,
+    sales_analytics_tab
+) = st.tabs([
+    "🧾 Expense",
+    "🧑‍🍳 Attendance",
+    "💰 Sales",
+    "📊 Expense Analytics",
+    "📈 Attendance Analytics",
+    "📊 Sales Analytics"
+])
 
 # =================================================
-# 🧾 EXPENSE TAB
+# 🧾 EXPENSE TAB (UNCHANGED)
 # =================================================
 with expense_tab:
-
     st.markdown("## 🧾 Expense Entry")
 
     with st.form("expense_form"):
         exp_date = st.date_input("Expense Date", value=now.date())
-        exp_time = st.time_input(
-            "Expense Time",
-            value=now.time().replace(second=0, microsecond=0)
-        )
-
+        exp_time = st.time_input("Expense Time", value=now.time().replace(second=0, microsecond=0))
         exp_datetime = datetime.combine(exp_date, exp_time)
         exp_datetime_str = exp_datetime.strftime("%d/%m/%Y %H:%M")
 
         category = st.selectbox("Category", [
-            "Groceries", "Vegetables", "Non-Veg", "Milk", "Banana Leaf",
-            "Maintenance", "Electricity", "Rent",
-            "Salary and Advance", "Transportation", "Others"
+            "Groceries","Vegetables","Non-Veg","Milk","Banana Leaf",
+            "Maintenance","Electricity","Rent",
+            "Salary and Advance","Transportation","Others"
         ])
 
         sub_category = st.text_input("Sub-Category")
         amount = st.number_input("Expense Amount", min_value=0.0, step=1.0)
-        payment = st.selectbox("Payment Mode", ["Cash", "UPI", "Cheque"])
-        by = st.selectbox("Expense By", ["RK", "AR", "YS"])
+        payment = st.selectbox("Payment Mode", ["Cash","UPI","Cheque"])
+        by = st.selectbox("Expense By", ["RK","AR","YS"])
 
         submit_expense = st.form_submit_button("✅ Submit Expense")
 
@@ -99,27 +107,22 @@ with expense_tab:
             st.error("Expense amount must be greater than 0")
         else:
             expense_sheet.append_row([
-                exp_datetime_str,
-                category,
-                sub_category,
-                amount,
-                payment,
-                by
+                exp_datetime_str, category, sub_category,
+                amount, payment, by
             ])
             st.success("Expense recorded successfully ✅")
 
 # =================================================
-# 🧑‍🍳 ATTENDANCE TAB
+# 🧑‍🍳 ATTENDANCE TAB (UNCHANGED)
 # =================================================
 with attendance_tab:
-
     st.markdown("## 🧑‍🍳 Employee Attendance")
 
     EMPLOYEES = [
-        "Vinoth", "Ravi", "Mani", "Ansari", "Kumar", "Hari",
-        "Samuthuram", "Ramesh", "Punitha", "Vembu", "Devi",
-        "Babu", "Latha", "Indhra", "Ambiga", "RY", "YS",
-        "Poosari", "Balaji"
+        "Vinoth","Ravi","Mani","Ansari","Kumar","Hari",
+        "Samuthuram","Ramesh","Punitha","Vembu","Devi",
+        "Babu","Latha","Indhra","Ambiga","RY","YS",
+        "Poosari","Balaji"
     ]
 
     att_date = st.date_input("Attendance Date", value=now.date())
@@ -127,22 +130,17 @@ with attendance_tab:
     entry_time = now.strftime("%d/%m/%Y %H:%M")
 
     st.markdown("### ❌ Morning Absentees")
-    morning = {e: st.checkbox(e, key=f"m_{e}") for e in EMPLOYEES}
+    m = {e: st.checkbox(e, key=f"m_{e}") for e in EMPLOYEES}
 
     st.markdown("### ❌ Afternoon Absentees")
-    afternoon = {e: st.checkbox(e, key=f"a_{e}") for e in EMPLOYEES}
+    a = {e: st.checkbox(e, key=f"a_{e}") for e in EMPLOYEES}
 
     st.markdown("### ❌ Night Absentees")
-    night = {e: st.checkbox(e, key=f"n_{e}") for e in EMPLOYEES}
+    n = {e: st.checkbox(e, key=f"n_{e}") for e in EMPLOYEES}
 
     if st.button("✅ Submit Attendance"):
-
         rows = attendance_sheet.get_all_values()
-        delete_rows = [
-            i for i, r in enumerate(rows[1:], start=2)
-            if r[0] == att_date_str
-        ]
-
+        delete_rows = [i for i, r in enumerate(rows[1:], start=2) if r[0] == att_date_str]
         for i in reversed(delete_rows):
             attendance_sheet.delete_rows(i)
 
@@ -150,86 +148,75 @@ with attendance_tab:
             attendance_sheet.append_row([
                 att_date_str,
                 e,
-                "✖" if morning[e] else "✔",
-                "✖" if afternoon[e] else "✔",
-                "✖" if night[e] else "✔",
+                "✖" if m[e] else "✔",
+                "✖" if a[e] else "✔",
+                "✖" if n[e] else "✔",
                 entry_time
             ])
-
         st.success("Attendance saved successfully ✅")
 
 # =================================================
-# 📊 EXPENSE ANALYTICS
+# 💰 SALES TAB (NEW)
 # =================================================
-with expense_analytics_tab:
+with sales_tab:
+    st.markdown("## 💰 Sales Entry")
 
-    st.markdown("## 📊 Expense Analytics")
+    with st.form("sales_form"):
+        sale_date = st.date_input("Sale Date", value=now.date())
+        sale_date_str = sale_date.strftime("%d-%m-%Y")
 
-    records = expense_sheet.get_all_records()
-    if not records:
-        st.info("No expense data yet.")
-    else:
-        df = pd.DataFrame(records)
+        store = st.selectbox("Store", ["Bigstreet", "Main", "Orders"])
+        time_slot = st.radio("Time Slot", ["Morning", "Night"], horizontal=True)
+        cash_total = st.number_input("Cash Total", min_value=0.0, step=100.0)
 
-        df["Date & Time"] = pd.to_datetime(
-            df["Date & Time"], format="%d/%m/%Y %H:%M"
-        )
-        df["Date"] = df["Date & Time"].dt.date
-        df["Week"] = df["Date & Time"].dt.to_period("W").astype(str)
-        df["Month"] = df["Date & Time"].dt.to_period("M").astype(str)
-        df["Expense Amount"] = pd.to_numeric(df["Expense Amount"])
+        submit_sale = st.form_submit_button("✅ Submit Sales")
 
-        st.metric("💰 Total Spend", f"₹ {df['Expense Amount'].sum():,.0f}")
-
-        view = st.radio("View", ["Daily", "Weekly", "Monthly"], horizontal=True)
-
-        if view == "Daily":
-            trend = df.groupby("Date")["Expense Amount"].sum()
-        elif view == "Weekly":
-            trend = df.groupby("Week")["Expense Amount"].sum()
+    if submit_sale:
+        if cash_total == 0:
+            st.error("Cash total must be greater than 0")
         else:
-            trend = df.groupby("Month")["Expense Amount"].sum()
+            rows = sales_sheet.get_all_values()
+            delete_rows = [
+                i for i, r in enumerate(rows[1:], start=2)
+                if r[0] == sale_date_str and r[1] == store and r[2] == time_slot
+            ]
+            for i in reversed(delete_rows):
+                sales_sheet.delete_rows(i)
 
-        st.line_chart(trend)
-
-        st.markdown("### 📊 Top 5 Expense Categories")
-        top_cat = df.groupby("Category")["Expense Amount"].sum().nlargest(5)
-        st.bar_chart(top_cat)
-
-        avg_daily = df.groupby("Date")["Expense Amount"].sum().mean()
-        st.metric("📉 Avg Daily Spend", f"₹ {avg_daily:,.0f}")
+            sales_sheet.append_row([
+                sale_date_str,
+                store,
+                time_slot,
+                cash_total,
+                now.strftime("%d/%m/%Y %H:%M")
+            ])
+            st.success("Sales recorded successfully ✅")
 
 # =================================================
-# 📈 ATTENDANCE ANALYTICS
+# 📊 SALES ANALYTICS (NEW)
 # =================================================
-with attendance_analytics_tab:
+with sales_analytics_tab:
+    st.markdown("## 📊 Sales Analytics")
 
-    st.markdown("## 📈 Attendance Analytics")
-
-    records = attendance_sheet.get_all_records()
+    records = sales_sheet.get_all_records()
     if not records:
-        st.info("No attendance data yet.")
+        st.info("No sales data yet.")
     else:
         df = pd.DataFrame(records)
 
-        df["absent_count"] = (
-            (df["Morning"] == "✖").astype(int) +
-            (df["Afternoon"] == "✖").astype(int) +
-            (df["Night"] == "✖").astype(int)
-        )
+        df["Date"] = pd.to_datetime(df["Date"], format="%d-%m-%Y")
+        df["Cash Total"] = pd.to_numeric(df["Cash Total"])
 
-        st.markdown("### 📈 Day-wise Absentees")
-        daily_absent = df.groupby("Date")["absent_count"].sum()
-        st.line_chart(daily_absent)
+        st.metric("💵 Total Sales", f"₹ {df['Cash Total'].sum():,.0f}")
 
-        st.markdown("### 🚨 Top 5 Absent Employees")
-        top_absent = df.groupby("Employee Name")["absent_count"].sum().nlargest(5)
-        st.bar_chart(top_absent)
+        st.markdown("### 📈 Daily Sales Trend")
+        daily_sales = df.groupby("Date")["Cash Total"].sum()
+        st.line_chart(daily_sales)
 
-        st.markdown("### ❌ Absentees by Shift")
-        shift_absent = {
-            "Morning": (df["Morning"] == "✖").sum(),
-            "Afternoon": (df["Afternoon"] == "✖").sum(),
-            "Night": (df["Night"] == "✖").sum()
-        }
-        st.bar_chart(pd.Series(shift_absent))
+        st.markdown("### 🏪 Store-wise Sales")
+        store_sales = df.groupby("Store")["Cash Total"].sum()
+        st.bar_chart(store_sales)
+
+        st.markdown("### 🌙 Morning vs Night")
+        slot_sales = df.groupby("Time Slot")["Cash Total"].sum()
+        st.bar_chart(slot_sales)
