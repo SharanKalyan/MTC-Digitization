@@ -150,8 +150,8 @@ elif section == "🧾 Expense Entry":
         submit = st.form_submit_button("✅ Submit Expense")
 
     if submit:
-        if amount == 0:
-            st.error("Expense amount must be greater than 0")
+        if amount < 0:
+            st.error("Expense amount must be greater than or equal to 0")
         else:
             expense_sheet.append_row([exp_datetime, category, sub_category, amount, payment, by])
             st.success("Expense recorded successfully ✅")
@@ -171,8 +171,8 @@ elif section == "💰 Sales Entry":
         submit = st.form_submit_button("✅ Submit Sales")
 
     if submit:
-        if cash_total == 0:
-            st.error("Cash total must be greater than 0")
+        if cash_total < 0:
+            st.error("Cash total must be greater than or equal to  0")
         else:
             rows = sales_sheet.get_all_values()
             for i in reversed([
@@ -291,4 +291,5 @@ elif section == "📊 Sales Analytics":
     df = pd.DataFrame(sales_sheet.get_all_records())
     df["Cash Total"] = pd.to_numeric(df["Cash Total"])
     st.bar_chart(df.groupby("Store")["Cash Total"].sum())
+
 
