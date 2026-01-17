@@ -156,7 +156,7 @@ with attendance_tab:
         st.success("Attendance saved successfully ✅")
 
 # =================================================
-# 💰 SALES TAB
+# 💰 SALES TAB (BUG-FREE & SIMPLE)
 # =================================================
 with sales_tab:
 
@@ -169,19 +169,11 @@ with sales_tab:
 
         store = st.selectbox("Store", ["Bigstreet", "Main", "Orders"])
 
-        # ✅ Show Time Slot ONLY for Bigstreet
-        if store == "Bigstreet":
-            time_slot = st.radio(
-                "Time Slot",
-                ["Morning", "Night"],
-                horizontal=True
-            )
-        else:
-            time_slot = "Full Day"
-            st.markdown(
-                "<small>⏱ This store runs full day</small>",
-                unsafe_allow_html=True
-            )
+        time_slot = st.radio(
+            "Time Slot",
+            ["Morning", "Night", "Full Day"],
+            horizontal=True
+        )
 
         cash_total = st.number_input(
             "Cash Total",
@@ -243,6 +235,7 @@ with sales_analytics_tab:
         st.markdown("### ⏱ Sales by Time Slot")
         slot_sales = df.groupby("Time Slot")["Cash Total"].sum()
         st.bar_chart(slot_sales)
+
 
 
 
