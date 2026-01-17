@@ -163,12 +163,13 @@ with sales_tab:
     st.markdown("## 💰 Sales Entry")
 
     with st.form("sales_form"):
+
         sale_date = st.date_input("Sale Date", value=now.date())
         sale_date_str = sale_date.strftime("%d-%m-%Y")
 
         store = st.selectbox("Store", ["Bigstreet", "Main", "Orders"])
 
-        # Time Slot logic
+        # ✅ Show Time Slot ONLY for Bigstreet
         if store == "Bigstreet":
             time_slot = st.radio(
                 "Time Slot",
@@ -177,7 +178,10 @@ with sales_tab:
             )
         else:
             time_slot = "Full Day"
-            st.info("ℹ️ This store runs full day")
+            st.markdown(
+                "<small>⏱ This store runs full day</small>",
+                unsafe_allow_html=True
+            )
 
         cash_total = st.number_input(
             "Cash Total",
@@ -239,5 +243,6 @@ with sales_analytics_tab:
         st.markdown("### ⏱ Sales by Time Slot")
         slot_sales = df.groupby("Time Slot")["Cash Total"].sum()
         st.bar_chart(slot_sales)
+
 
 
