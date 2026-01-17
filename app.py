@@ -75,6 +75,8 @@ now = datetime.now(ist)
     "📊 Expense Analytics",
     "📈 Attendance Analytics",
     "📊 Sales Analytics"
+    "📊 Today_summary_tab"
+
 ])
 
 # =================================================
@@ -296,6 +298,7 @@ with today_summary_tab:
         f"₹ {remaining_balance:,.0f}",
         delta=None
     )
+
 
 
 
