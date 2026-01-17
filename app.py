@@ -195,34 +195,78 @@ elif section == "🧑‍🍳 Attendance":
     st.markdown("## 🧑‍🍳 Employee Attendance")
 
     EMPLOYEES = [
-        "Vinoth","Ravi","Mani","Ansari","Kumar","Hari","Samuthuram",
-        "Ramesh","Punitha","Vembu","Devi","Babu","Latha","Indhra",
-        "Ambiga","RY","YS","Poosari","Balaji"
+        "Vinoth","Ravi","Mani","Ansari","Kumar","Hari",
+        "Samuthuram","Ramesh","Punitha","Vembu","Devi",
+        "Babu","Latha","Indhra","Ambiga","RY","YS",
+        "Poosari","Balaji"
     ]
 
-    att_date = st.date_input("Attendance Date", value=now.date()).strftime("%d/%m/%Y")
+    att_date = st.date_input(
+        "Attendance Date",
+        value=now.date()
+    ).strftime("%d/%m/%Y")
+
     entry_time = now.strftime("%d/%m/%Y %H:%M")
 
-    m = {e: st.checkbox(f"Morning - {e}", key=f"m_{e}") for e in EMPLOYEES}
-    a = {e: st.checkbox(f"Afternoon - {e}", key=f"a_{e}") for e in EMPLOYEES}
-    n = {e: st.checkbox(f"Night - {e}", key=f"n_{e}") for e in EMPLOYEES}
+    # -------------------------
+    # MORNING
+    # -------------------------
+    st.markdown("### 🌅 Morning")
+    morning = {
+        emp: st.checkbox(emp, key=f"m_{emp}")
+        for emp in EMPLOYEES
+    }
 
+    st.divider()
+
+    # -------------------------
+    # AFTERNOON
+    # -------------------------
+    st.markdown("### ☀️ Afternoon")
+    afternoon = {
+        emp: st.checkbox(emp, key=f"a_{emp}")
+        for emp in EMPLOYEES
+    }
+
+    st.divider()
+
+    # -------------------------
+    # NIGHT
+    # -------------------------
+    st.markdown("### 🌙 Night")
+    night = {
+        emp: st.checkbox(emp, key=f"n_{emp}")
+        for emp in EMPLOYEES
+    }
+
+    # -------------------------
+    # SUBMIT
+    # -------------------------
     if st.button("✅ Submit Attendance"):
+
+        # Delete existing entries for that date
         rows = attendance_sheet.get_all_values()
-        for i in reversed([idx for idx, r in enumerate(rows[1:], start=2) if r[0] == att_date]):
+        rows_to_delete = [
+            i for i, r in enumerate(rows[1:], start=2)
+            if r[0] == att_date
+        ]
+
+        for i in reversed(rows_to_delete):
             attendance_sheet.delete_rows(i)
 
-        for e in EMPLOYEES:
+        # Insert fresh rows
+        for emp in EMPLOYEES:
             attendance_sheet.append_row([
-                att_date, e,
-                "✖" if m[e] else "✔",
-                "✖" if a[e] else "✔",
-                "✖" if n[e] else "✔",
+                att_date,
+                emp,
+                "✖" if morning[emp] else "✔",
+                "✖" if afternoon[emp] else "✔",
+                "✖" if night[emp] else "✔",
                 entry_time
             ])
 
         st.success("Attendance saved successfully ✅")
-
+        
 # =================================================
 # 📊 ANALYTICS SECTIONS (UNCHANGED LOGIC)
 # =================================================
@@ -247,3 +291,4 @@ elif section == "📊 Sales Analytics":
     df = pd.DataFrame(sales_sheet.get_all_records())
     df["Cash Total"] = pd.to_numeric(df["Cash Total"])
     st.bar_chart(df.groupby("Store")["Cash Total"].sum())
+
