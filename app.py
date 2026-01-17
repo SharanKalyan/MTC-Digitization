@@ -236,6 +236,67 @@ with sales_analytics_tab:
         slot_sales = df.groupby("Time Slot")["Cash Total"].sum()
         st.bar_chart(slot_sales)
 
+# =================================================
+# 📊 TODAY SUMMARY DASHBOARD
+# =================================================
+with today_summary_tab:
+
+    st.markdown("## 📊 Today's Summary")
+
+    # ---------- TODAY STRINGS ----------
+    today_sales_str = now.strftime("%d-%m-%Y")
+    today_expense_str = now.strftime("%d/%m/%Y")
+
+    # ---------- SALES ----------
+    sales_records = sales_sheet.get_all_records()
+    sales_df = pd.DataFrame(sales_records) if sales_records else pd.DataFrame()
+
+    if not sales_df.empty:
+        sales_df["Cash Total"] = pd.to_numeric(sales_df["Cash Total"])
+        today_sales = sales_df[sales_df["Date"] == today_sales_str]
+
+        bigstreet_total = today_sales[today_sales["Store"] == "Bigstreet"]["Cash Total"].sum()
+        main_total = today_sales[today_sales["Store"] == "Main"]["Cash Total"].sum()
+        orders_total = today_sales[today_sales["Store"] == "Orders"]["Cash Total"].sum()
+
+        total_sales_today = bigstreet_total + main_total + orders_total
+    else:
+        bigstreet_total = main_total = orders_total = total_sales_today = 0
+
+    # ---------- EXPENSE ----------
+    expense_records = expense_sheet.get_all_records()
+    expense_df = pd.DataFrame(expense_records) if expense_records else pd.DataFrame()
+
+    if not expense_df.empty:
+        expense_df["Expense Amount"] = pd.to_numeric(expense_df["Expense Amount"])
+        expense_df["Date"] = expense_df["Date & Time"].str.split(" ").str[0]
+
+        today_expense = expense_df[expense_df["Date"] == today_expense_str]
+        total_expense_today = today_expense["Expense Amount"].sum()
+    else:
+        total_expense_today = 0
+
+    # ---------- BALANCE ----------
+    remaining_balance = total_sales_today - total_expense_today
+
+    # ---------- UI ----------
+    st.metric("🏪 Bigstreet Sales", f"₹ {bigstreet_total:,.0f}")
+    st.metric("🏬 Main Store Sales", f"₹ {main_total:,.0f}")
+    st.metric("📦 Orders Sales", f"₹ {orders_total:,.0f}")
+
+    st.markdown("---")
+
+    st.metric("💵 Total Sales Today", f"₹ {total_sales_today:,.0f}")
+    st.metric("💸 Total Expense Today", f"₹ {total_expense_today:,.0f}")
+
+    st.markdown("---")
+
+    st.metric(
+        "💰 Balance Remaining Today",
+        f"₹ {remaining_balance:,.0f}",
+        delta=None
+    )
+
 
 
 
