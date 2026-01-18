@@ -197,21 +197,55 @@ elif section == "🧑‍🍳 Attendance":
         "Poosari","Balaji"
     ]
 
-    att_date = st.date_input("Attendance Date", value=now.date()).strftime("%d/%m/%Y")
+    att_date = st.date_input(
+        "Attendance Date",
+        value=now.date()
+    ).strftime("%d/%m/%Y")
+
     entry_time = now.strftime("%d/%m/%Y %H:%M")
 
-    attendance = {}
-    for emp in EMPLOYEES:
-        attendance[emp] = st.checkbox(emp)
+    st.markdown("### 🌅 Morning")
+    morning = {
+        emp: st.checkbox(emp, key=f"m_{emp}")
+        for emp in EMPLOYEES
+    }
+
+    st.markdown("### ☀️ Afternoon")
+    afternoon = {
+        emp: st.checkbox(emp, key=f"a_{emp}")
+        for emp in EMPLOYEES
+    }
+
+    st.markdown("### 🌙 Night")
+    night = {
+        emp: st.checkbox(emp, key=f"n_{emp}")
+        for emp in EMPLOYEES
+    }
 
     if st.button("✅ Submit Attendance"):
-        for emp, present in attendance.items():
+
+        # Remove existing attendance for the same date (prevents duplicates)
+        rows = attendance_sheet.get_all_values()
+        for i in reversed([
+            idx for idx, r in enumerate(rows[1:], start=2)
+            if r[0] == att_date
+        ]):
+            attendance_sheet.delete_rows(i)
+
+        # Insert fresh attendance
+        for emp in EMPLOYEES:
             attendance_sheet.append_row([
-                att_date, emp,
-                "✔" if present else "✖",
+                att_date,
+                emp,
+                "✔" if morning[emp] else "✖",
+                "✔" if afternoon[emp] else "✖",
+                "✔" if night[emp] else "✖",
                 entry_time
             ])
+
         st.success("Attendance saved successfully ✅")
+
+
 
 # =================================================
 # 📊 EXPENSE ANALYTICS (ENHANCED)
@@ -292,6 +326,7 @@ elif section == "📊 Sales Analytics":
     else:
         df["Cash Total"] = pd.to_numeric(df["Cash Total"], errors="coerce")
         st.bar_chart(df.groupby("Store")["Cash Total"].sum())
+
 
 
 
