@@ -237,9 +237,9 @@ elif section == "🧑‍🍳 Attendance":
             attendance_sheet.append_row([
                 att_date,
                 emp,
-                "✔" if morning[emp] else "✖",
-                "✔" if afternoon[emp] else "✖",
-                "✔" if night[emp] else "✖",
+                "✖" if morning[emp] else "✔",
+                "✖" if afternoon[emp] else "✔",
+                "✖" if night[emp] else "✔",
                 entry_time
             ])
 
@@ -326,6 +326,7 @@ elif section == "📊 Sales Analytics":
     else:
         df["Cash Total"] = pd.to_numeric(df["Cash Total"], errors="coerce")
         st.bar_chart(df.groupby("Store")["Cash Total"].sum())
+
 
 
 
