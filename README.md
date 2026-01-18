@@ -1,4 +1,4 @@
-# Monisha Tiffin Center – SMB Digitalization & Analytics System
+# Sri Monisha Tiffin Center – SMB Digitalization & Analytics System
 
 ## Project Context
 
@@ -165,7 +165,7 @@ The goal was usability over complexity.
 
 Most importantly, the owner now knows:
 
-“How is my business actually performing — today, not later.”
+“How is my business actually performing today, not later.”
 
 ## Future Enhancements
 
@@ -180,4 +180,4 @@ Potential next steps include:
 
 This project demonstrates how simple tools, when designed correctly, can bring real operational clarity to small businesses.
 
-It’s not about building complex systems — it’s about solving the right problem, in the right way, for the right user.
+It’s not about building complex systems, it’s about solving the right problem, in the right way, for the right user.
