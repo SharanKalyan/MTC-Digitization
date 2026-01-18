@@ -4,6 +4,7 @@ import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
 import pytz
+import matplotlib.pyplot as plt
 
 # -------------------------------------------------
 # Page Configuration
@@ -17,7 +18,7 @@ if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
 if not st.session_state.authenticated:
-    st.markdown("### Welcome! ")
+    st.markdown("### Welcome!")
     st.markdown("### 🔒 Enter PIN to Access")
 
     with st.form("pin_form"):
@@ -60,12 +61,10 @@ ist = pytz.timezone("Asia/Kolkata")
 now = datetime.now(ist)
 
 # -------------------------------------------------
-# Navigation (Dropdown)
+# Navigation
 # -------------------------------------------------
-st.markdown("### 📢 Select Section")
-
 section = st.selectbox(
-    "",
+    "📢 Select Section",
     [
         "📊 Today's Summary",
         "🧾 Expense Entry",
@@ -75,207 +74,125 @@ section = st.selectbox(
         "📈 Attendance Analytics",
         "📊 Sales Analytics",
     ],
-    index=0
 )
 
 # =================================================
-# 📊 TODAY SUMMARY (RUNNING BALANCE)
+# 📊 EXPENSE ANALYTICS (ENHANCED)
 # =================================================
-if section == "📊 Today's Summary":
-
-    st.markdown("## 📊 Today's Summary")
-
-    today_sales_str = now.strftime("%d-%m-%Y")
-    today_expense_str = now.strftime("%d/%m/%Y")
-
-    # ---------- SALES ----------
-    sales_records = sales_sheet.get_all_records()
-    sales_df = pd.DataFrame(sales_records)
-
-    if not sales_df.empty:
-        sales_df["Cash Total"] = pd.to_numeric(sales_df["Cash Total"], errors="coerce")
-        today_sales = sales_df[sales_df["Date"] == today_sales_str]
-
-        bigstreet_total = today_sales[today_sales["Store"] == "Bigstreet"]["Cash Total"].sum()
-        main_total = today_sales[today_sales["Store"] == "Main"]["Cash Total"].sum()
-        orders_total = today_sales[today_sales["Store"] == "Orders"]["Cash Total"].sum()
-        total_sales_today = bigstreet_total + main_total + orders_total
-    else:
-        bigstreet_total = main_total = orders_total = total_sales_today = 0
-
-    # ---------- EXPENSE ----------
-    expense_records = expense_sheet.get_all_records()
-    expense_df = pd.DataFrame(expense_records)
-
-    if not expense_df.empty:
-        expense_df["Expense Amount"] = pd.to_numeric(expense_df["Expense Amount"], errors="coerce")
-        expense_df["Date"] = expense_df["Date & Time"].str.split(" ").str[0]
-        total_expense_today = expense_df[
-            expense_df["Date"] == today_expense_str
-        ]["Expense Amount"].sum()
-    else:
-        total_expense_today = 0
-
-    # ---------- OPENING BALANCE ----------
-    balance_records = balance_sheet.get_all_records()
-    balance_df = pd.DataFrame(balance_records)
-
-    if not balance_df.empty:
-        balance_df["Date"] = pd.to_datetime(balance_df["Date"], format="%d-%m-%Y")
-        balance_df = balance_df.sort_values("Date")
-        opening_balance = int(balance_df.iloc[-1]["Closing Balance"])
-    else:
-        opening_balance = 0
-
-    # ---------- CLOSING BALANCE ----------
-    closing_balance = opening_balance + total_sales_today - total_expense_today
-
-    # ---------- UI ----------
-    st.metric("📥 Opening Balance", f"₹ {opening_balance:,.0f}")
-
-    st.metric("🏪 Bigstreet Sales", f"₹ {bigstreet_total:,.0f}")
-    st.metric("🏬 Main Store Sales", f"₹ {main_total:,.0f}")
-    st.metric("📦 Orders Sales", f"₹ {orders_total:,.0f}")
-
-    st.markdown("---")
-
-    st.metric("💵 Total Sales Today", f"₹ {total_sales_today:,.0f}")
-    st.metric("💸 Total Expense Today", f"₹ {total_expense_today:,.0f}")
-
-    st.markdown("---")
-
-    st.metric("💰 Balance Remaining Today", f"₹ {closing_balance:,.0f}")
-
-    if st.button("📌 Save Closing Balance for Today"):
-        balance_sheet.append_row([
-            today_sales_str,
-            int(opening_balance),
-            int(total_sales_today),
-            int(total_expense_today),
-            int(closing_balance),
-            now.strftime("%d/%m/%Y %H:%M")
-        ])
-        st.success("Closing balance saved successfully ✅")
-
-# =================================================
-# 🧾 EXPENSE ENTRY
-# =================================================
-elif section == "🧾 Expense Entry":
-
-    st.markdown("## 🧾 Expense Entry")
-
-    with st.form("expense_form"):
-        exp_date = st.date_input("Expense Date", value=now.date())
-        exp_time = st.time_input("Expense Time", value=now.time().replace(second=0, microsecond=0))
-        exp_datetime = datetime.combine(exp_date, exp_time).strftime("%d/%m/%Y %H:%M")
-
-        category = st.selectbox(
-            "Category",
-            ["Groceries","Vegetables","Non-Veg","Milk","Banana Leaf",
-             "Maintenance","Electricity","Rent",
-             "Salary and Advance","Transportation","Others"]
-        )
-
-        sub_category = st.text_input("Sub-Category")
-        amount = st.number_input("Expense Amount", min_value=0.0, step=1.0)
-        payment = st.selectbox("Payment Mode", ["Cash","UPI","Cheque"])
-        by = st.selectbox("Expense By", ["RK","AR","YS"])
-
-        submit = st.form_submit_button("✅ Submit Expense")
-
-    if submit:
-        expense_sheet.append_row([exp_datetime, category, sub_category, amount, payment, by])
-        st.success("Expense recorded successfully ✅")
-
-# =================================================
-# 💰 SALES ENTRY
-# =================================================
-elif section == "💰 Sales Entry":
-
-    st.markdown("## 💰 Sales Entry")
-
-    with st.form("sales_form"):
-        sale_date = st.date_input("Sale Date", value=now.date()).strftime("%d-%m-%Y")
-        store = st.selectbox("Store", ["Bigstreet", "Main", "Orders"])
-        time_slot = st.radio("Time Slot", ["Morning", "Night", "Full Day"], horizontal=True)
-        cash_total = st.number_input("Cash Total", min_value=0.0, step=100.0)
-        submit = st.form_submit_button("✅ Submit Sales")
-
-    if submit:
-        rows = sales_sheet.get_all_values()
-        for i in reversed([
-            idx for idx, r in enumerate(rows[1:], start=2)
-            if r[0] == sale_date and r[1] == store and r[2] == time_slot
-        ]):
-            sales_sheet.delete_rows(i)
-
-        sales_sheet.append_row([
-            sale_date, store, time_slot,
-            cash_total, now.strftime("%d/%m/%Y %H:%M")
-        ])
-        st.success("Sales recorded successfully ✅")
-
-# =================================================
-# 🧑‍🍳 ATTENDANCE
-# =================================================
-elif section == "🧑‍🍳 Attendance":
-
-    st.markdown("## 🧑‍🍳 Employee Attendance")
-
-    EMPLOYEES = [
-        "Vinoth","Ravi","Mani","Ansari","Kumar","Hari",
-        "Samuthuram","Ramesh","Punitha","Vembu","Devi",
-        "Babu","Latha","Indhra","Ambiga","RY","YS",
-        "Poosari","Balaji"
-    ]
-
-    att_date = st.date_input("Attendance Date", value=now.date()).strftime("%d/%m/%Y")
-    entry_time = now.strftime("%d/%m/%Y %H:%M")
-
-    st.markdown("### 🌅 Morning")
-    morning = {e: st.checkbox(e, key=f"m_{e}") for e in EMPLOYEES}
-
-    st.markdown("### ☀️ Afternoon")
-    afternoon = {e: st.checkbox(e, key=f"a_{e}") for e in EMPLOYEES}
-
-    st.markdown("### 🌙 Night")
-    night = {e: st.checkbox(e, key=f"n_{e}") for e in EMPLOYEES}
-
-    if st.button("✅ Submit Attendance"):
-        rows = attendance_sheet.get_all_values()
-        for i in reversed([
-            idx for idx, r in enumerate(rows[1:], start=2)
-            if r[0] == att_date
-        ]):
-            attendance_sheet.delete_rows(i)
-
-        for emp in EMPLOYEES:
-            attendance_sheet.append_row([
-                att_date,
-                emp,
-                "✖" if morning[emp] else "✔",
-                "✖" if afternoon[emp] else "✔",
-                "✖" if night[emp] else "✔",
-                entry_time
-            ])
-
-        st.success("Attendance saved successfully ✅")
-
-# =================================================
-# 📊 EXPENSE ANALYTICS
-# =================================================
-elif section == "📊 Expense Analytics":
+if section == "📊 Expense Analytics":
 
     st.markdown("## 📊 Expense Analytics")
 
     records = expense_sheet.get_all_records()
     if not records:
         st.info("No expense data available yet.")
-    else:
-        df = pd.DataFrame(records)
-        df["Expense Amount"] = pd.to_numeric(df["Expense Amount"], errors="coerce")
-        df["Date"] = df["Date & Time"].str.split(" ").str[0]
-        st.line_chart(df.groupby("Date")["Expense Amount"].sum())
+        st.stop()
+
+    df = pd.DataFrame(records)
+
+    # ---------- Data Cleaning ----------
+    df["Expense Amount"] = pd.to_numeric(df["Expense Amount"], errors="coerce")
+
+    df["datetime"] = pd.to_datetime(
+        df["Date & Time"],
+        format="%d/%m/%Y %H:%M",
+        errors="coerce"
+    )
+
+    df = df.dropna(subset=["datetime", "Expense Amount"])
+
+    df["date"] = df["datetime"].dt.date
+    df["week"] = df["datetime"].dt.isocalendar().week
+    df["month"] = df["datetime"].dt.to_period("M")
+    df["year"] = df["datetime"].dt.year
+
+    # ---------- Total Expense ----------
+    st.metric("💸 Total Expense", f"₹ {df['Expense Amount'].sum():,.0f}")
+    st.markdown("---")
+
+    # =================================================
+    # 1️⃣ Category-wise Expense
+    # =================================================
+    st.subheader("📂 Category-wise Expense")
+
+    cat_df = (
+        df.groupby("Category")["Expense Amount"]
+        .sum()
+        .sort_values(ascending=False)
+    )
+
+    st.bar_chart(cat_df)
+
+    st.markdown("---")
+
+    # =================================================
+    # 2️⃣ Daily / Weekly / Monthly Trend
+    # =================================================
+    st.subheader("📈 Expense Trend")
+
+    trend_type = st.radio(
+        "View expense trend by:",
+        ["Daily", "Weekly", "Monthly"],
+        horizontal=True
+    )
+
+    if trend_type == "Daily":
+        trend_df = df.groupby("date")["Expense Amount"].sum()
+
+    elif trend_type == "Weekly":
+        current_month = now.month
+        current_year = now.year
+
+        temp = df[
+            (df["datetime"].dt.month == current_month) &
+            (df["datetime"].dt.year == current_year)
+        ]
+
+        trend_df = temp.groupby("week")["Expense Amount"].sum()
+        trend_df.index = trend_df.index.astype(str).map(lambda x: f"Week {x}")
+
+    else:  # Monthly
+        current_year = now.year
+        temp = df[df["year"] == current_year]
+
+        trend_df = (
+            temp.groupby("month")["Expense Amount"]
+            .sum()
+            .sort_index()
+        )
+        trend_df.index = trend_df.index.astype(str)
+
+    st.line_chart(trend_df)
+
+    st.markdown("---")
+
+    # =================================================
+    # 3️⃣ Payment Mode-wise Expense (Pie)
+    # =================================================
+    st.subheader("💳 Expense by Payment Mode")
+
+    pay_df = df.groupby("Payment Mode")["Expense Amount"].sum()
+
+    fig1, ax1 = plt.subplots()
+    ax1.pie(pay_df, labels=pay_df.index, autopct="%1.1f%%", startangle=90)
+    ax1.axis("equal")
+
+    st.pyplot(fig1)
+
+    st.markdown("---")
+
+    # =================================================
+    # 4️⃣ Expense By Person
+    # =================================================
+    st.subheader("👤 Expense by Person")
+
+    by_df = (
+        df.groupby("Expense By")["Expense Amount"]
+        .sum()
+        .sort_values(ascending=False)
+    )
+
+    st.bar_chart(by_df)
 
 # =================================================
 # 📈 ATTENDANCE ANALYTICS
@@ -310,5 +227,3 @@ elif section == "📊 Sales Analytics":
         df = pd.DataFrame(records)
         df["Cash Total"] = pd.to_numeric(df["Cash Total"], errors="coerce")
         st.bar_chart(df.groupby("Store")["Cash Total"].sum())
-
-
