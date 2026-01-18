@@ -5,7 +5,7 @@
 This project began when a small and medium-sized restaurant (SMB) owner approached me with a common but critical problem:
 
 All sales, expenses, and employee attendance were being written manually in notebooks.
-There was no visibility into daily performance, profits, or cash position — only handwritten records.
+There was no visibility into daily performance, profits, or cash position, only handwritten records.
 
 As the business grew, this manual process became:
 
@@ -37,10 +37,14 @@ The primary goals of this system were:
 The solution is a Streamlit-based web application backed by Google Sheets as a lightweight database.
 
 Why this stack?
-Component	Reason
-Streamlit	Rapid UI development, mobile-friendly, simple deployment. Google Sheets was Familiar to the SMB users, cloud-based, no database setup
-Python + Pandas	Reliable analytics and data transformations
-Service Account Auth	Secure access without user login complexity
+
+| Component                | Reason                                                   |
+| ------------------------ | -------------------------------------------------------- |
+| **Streamlit**            | Rapid UI development, mobile-friendly, simple deployment |
+| **Google Sheets**        | Familiar to SMB users, cloud-based, no database setup    |
+| **Python + Pandas**      | Reliable analytics and data transformations              |
+| **Service Account Auth** | Secure access without user login complexity              |
+
 
 The app is deployed on Streamlit Cloud and accessed via a browser, often saved to the phone’s home screen like an app.
 
@@ -49,114 +53,75 @@ The app is deployed on Streamlit Cloud and accessed via a browser, often saved t
 - PIN-based access (stored securely using Streamlit Secrets)
 - Google Sheets access restricted via service account
 - No public credentials exposed in the repository
-- Core Functional Modules
-- Expense Management
+
+## Core Functional Modules
+### 1. Expense Management
 
 Allows daily recording of expenses with:
+- Date & time (editable for backdated entries)
+- Category & sub-category
+- Amount
+- Payment mode
+- Person responsible
 
-Date & time (editable for backdated entries)
+### Outcome:
+- Complete visibility into where money is spent.
+- Foundation for expense trend analytics
 
-Category & sub-category
-
-Amount
-
-Payment mode
-
-Person responsible
-
-Outcome:
-
-Complete visibility into where money is spent
-
-Foundation for expense trend analytics
-
-2️⃣ Sales Tracking
+### 2. Sales Tracking
 
 Handles sales across multiple revenue sources:
+- Bigstreet
+- Main Store
+- Orders
 
-Bigstreet
+### Key features:
+- Morning / Night / Full Day slots
+- Overwrites duplicate entries for accuracy
+- Cash-based entry (as per current business needs)
 
-Main Store
+### Outcome:
+- Clean daily sales data
+- Store-wise and slot-wise analysis
 
-Orders
-
-Key features:
-
-Morning / Night / Full Day slots
-
-Overwrites duplicate entries for accuracy
-
-Cash-based entry (as per current business needs)
-
-Outcome:
-
-Clean daily sales data
-
-Store-wise and slot-wise analysis
-
-3️⃣ Employee Attendance
-
+### 3️. Employee Attendance
 Attendance is recorded once per day with:
+- Morning, Afternoon, Night shifts
+- Grouped employee selection (mobile-optimized)
+- Absentees marked explicitly
+- Previous entries overwritten to avoid duplicates
 
-Morning, Afternoon, Night shifts
+### Outcome:
+- Clear attendance history
+- Ability to identify frequently absent employees
+- Shift-wise absence analysis
 
-Grouped employee selection (mobile-optimized)
-
-Absentees marked explicitly
-
-Previous entries overwritten to avoid duplicates
-
-Outcome:
-
-Clear attendance history
-
-Ability to identify frequently absent employees
-
-Shift-wise absence analysis
-
-4️⃣ Real-Time Analytics Dashboards
+### 4️. Real-Time Analytics Dashboards
 
 Built-in dashboards provide insights such as:
-
-Expense Analytics
-
-Day-wise expense trends
-
-Historical expense tracking
-
-Sales Analytics
-
-Store-wise revenue breakdown
-
-Time-slot analysis
-
-Attendance Analytics
-
-Total absences per employee
-
-Shift-wise absentee trends
+- Expense Analytics
+- Day-wise expense trends
+- Historical expense tracking
+- Sales Analytics
+- Store-wise revenue breakdown
+- Time-slot analysis
+- Attendance Analytics
+- Total absences per employee
+- Shift-wise absentee trends
 
 All analytics update in real time as data is entered.
 
-5️⃣ Daily Cash Balance Tracking (Key Feature)
-
+### 5️. Daily Cash Balance Tracking (Key Feature)
 One of the most important additions was running cash balance tracking.
-
 Instead of only showing:
-
-Sales - Expenses = Today’s Profit
-
+- Sales - Expenses = Today’s Profit
 
 The system tracks:
-
-Opening balance (carried forward)
-
-Today’s total sales
-
-Today’s total expenses
-
-Closing balance (saved explicitly)
-
+- Opening balance (carried forward)
+- Today’s total sales
+- Today’s total expenses
+- Closing balance (saved explicitly)
+  
 This mirrors real-world cash management in small businesses.
 
 Example:
@@ -170,67 +135,48 @@ Today Expenses: ₹25,000
 
 This gives the owner a true picture of cash-in-hand, not just daily margins.
 
-📁 Data Architecture (Google Sheets)
+## Data Architecture (Google Sheets)
 
 Each operational area maps cleanly to its own sheet:
-
-Sheet1 → Expenses
-
-Attendance → Employee attendance
-
-Sales → Sales entries
-
-Daily_Balance → Opening & closing balances
+- Sheet1 → Expenses
+- Attendance → Employee attendance
+- Sales → Sales entries
+- Daily_Balance → Opening & closing balances
 
 This structure keeps data simple, auditable, and easy to export.
 
-📱 Mobile-First Design Philosophy
+## Mobile-First Design Philosophy
 
 Since the owner primarily uses an Android phone, the UI was designed with:
-
-Dropdown-based navigation (instead of tabs)
-
-Minimal typing
-
-Large clickable elements
-
-Simple forms
-
-Clear success/error feedback
+- Dropdown-based navigation (instead of tabs)
+- Minimal typing
+- Large clickable elements
+- Simple forms
+- Clear success/error feedback
 
 The goal was usability over complexity.
 
-🚀 Impact & Outcomes
-
-Eliminated handwritten notebooks
-
-Reduced manual errors
-
-Enabled data-driven decisions
-
-Provided daily financial clarity
-
-Created a foundation for future dashboards and forecasting
+## Impact & Outcomes
+- Eliminated handwritten notebooks
+- Reduced manual errors
+- Enabled data-driven decisions
+- Provided daily financial clarity
+- Created a foundation for future dashboards and forecasting
 
 Most importantly, the owner now knows:
 
 “How is my business actually performing — today, not later.”
 
-🔮 Future Enhancements
+## Future Enhancements
 
 Potential next steps include:
+- Weekly & monthly profit reports
+- Automatic daily closing reminders
+- Role-based access
+- Export to PDF / Excel
 
-Weekly & monthly profit reports
 
-Automatic daily closing reminders
-
-Role-based access
-
-Export to PDF / Excel
-
-WhatsApp or push notifications
-
-🧠 Final Note
+## Final Note
 
 This project demonstrates how simple tools, when designed correctly, can bring real operational clarity to small businesses.
 
