@@ -183,8 +183,9 @@ elif section == "💰 Sales Entry":
         ])
         st.success("Sales recorded successfully ✅")
 
+
 # =================================================
-# 🧑‍🍳 ATTENDANCE
+# 🧑‍🍳 ATTENDANCE (2 SHIFTS: MORNING & NIGHT)
 # =================================================
 elif section == "🧑‍🍳 Attendance":
 
@@ -204,19 +205,13 @@ elif section == "🧑‍🍳 Attendance":
 
     entry_time = now.strftime("%d/%m/%Y %H:%M")
 
-    st.markdown("### 🌅 Morning")
+    st.markdown("### 🌅 Morning (Tick if Absent)")
     morning = {
         emp: st.checkbox(emp, key=f"m_{emp}")
         for emp in EMPLOYEES
     }
 
-    st.markdown("### ☀️ Afternoon")
-    afternoon = {
-        emp: st.checkbox(emp, key=f"a_{emp}")
-        for emp in EMPLOYEES
-    }
-
-    st.markdown("### 🌙 Night")
+    st.markdown("### 🌙 Night (Tick if Absent)")
     night = {
         emp: st.checkbox(emp, key=f"n_{emp}")
         for emp in EMPLOYEES
@@ -224,7 +219,7 @@ elif section == "🧑‍🍳 Attendance":
 
     if st.button("✅ Submit Attendance"):
 
-        # Remove existing attendance for the same date (prevents duplicates)
+        # Remove existing attendance for the same date
         rows = attendance_sheet.get_all_values()
         for i in reversed([
             idx for idx, r in enumerate(rows[1:], start=2)
@@ -238,12 +233,12 @@ elif section == "🧑‍🍳 Attendance":
                 att_date,
                 emp,
                 "✖" if morning[emp] else "✔",
-                "✖" if afternoon[emp] else "✔",
                 "✖" if night[emp] else "✔",
                 entry_time
             ])
 
         st.success("Attendance saved successfully ✅")
+
 
 
 
@@ -395,6 +390,7 @@ elif section == "📊 Sales Analytics":
     else:
         df["Cash Total"] = pd.to_numeric(df["Cash Total"], errors="coerce")
         st.bar_chart(df.groupby("Store")["Cash Total"].sum())
+
 
 
 
