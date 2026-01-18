@@ -191,9 +191,9 @@ elif section == "🧑‍🍳 Attendance":
     st.markdown("## 🧑‍🍳 Employee Attendance")
 
     EMPLOYEES = [
-        "Vinoth","Ravi","Mani","Ansari","Kumar","Hari",
+        "Vinoth","Ravi","Mani","Ansari","Kumar","Sakthi","Vijaya","Hari",
         "Samuthuram","Ramesh","Punitha","Vembu","Devi",
-        "Babu","Latha","Indhra","Ambiga","RY","YS",
+        "Babu","Latha","Indhra","Ambika","RY","YS",
         "Poosari","Balaji"
     ]
 
@@ -326,6 +326,7 @@ elif section == "📊 Sales Analytics":
     else:
         df["Cash Total"] = pd.to_numeric(df["Cash Total"], errors="coerce")
         st.bar_chart(df.groupby("Store")["Cash Total"].sum())
+
 
 
 
