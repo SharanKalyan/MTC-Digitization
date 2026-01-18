@@ -122,13 +122,14 @@ if section == "📊 Today's Summary":
 
     if st.button("📌 Save Closing Balance for Today"):
         balance_sheet.append_row([
-            today_sales_str,
-            opening_balance,
-            total_sales_today,
-            total_expense_today,
-            closing_balance,
-            now.strftime("%d/%m/%Y %H:%M")
+        today_sales_str,
+        int(opening_balance),
+        float(total_sales_today),
+        float(total_expense_today),
+        float(closing_balance),
+        now.strftime("%d/%m/%Y %H:%M")
         ])
+   
         st.success("Closing balance saved successfully ✅")
 
 # =================================================
@@ -282,3 +283,4 @@ elif section == "📊 Sales Analytics":
     else:
         df["Cash Total"] = pd.to_numeric(df["Cash Total"], errors="coerce")
         st.bar_chart(df.groupby("Store")["Cash Total"].sum())
+
