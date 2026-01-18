@@ -88,9 +88,11 @@ if section == "📊 Today's Summary":
     today_expense_str = now.strftime("%d/%m/%Y")
 
     # ---------- SALES ----------
-    sales_df = pd.DataFrame(sales_sheet.get_all_records())
+    sales_records = sales_sheet.get_all_records()
+    sales_df = pd.DataFrame(sales_records)
+
     if not sales_df.empty:
-        sales_df["Cash Total"] = pd.to_numeric(sales_df["Cash Total"])
+        sales_df["Cash Total"] = pd.to_numeric(sales_df["Cash Total"], errors="coerce")
         today_sales = sales_df[sales_df["Date"] == today_sales_str]
 
         bigstreet_total = today_sales[today_sales["Store"] == "Bigstreet"]["Cash Total"].sum()
@@ -101,9 +103,11 @@ if section == "📊 Today's Summary":
         bigstreet_total = main_total = orders_total = total_sales_today = 0
 
     # ---------- EXPENSE ----------
-    expense_df = pd.DataFrame(expense_sheet.get_all_records())
+    expense_records = expense_sheet.get_all_records()
+    expense_df = pd.DataFrame(expense_records)
+
     if not expense_df.empty:
-        expense_df["Expense Amount"] = pd.to_numeric(expense_df["Expense Amount"])
+        expense_df["Expense Amount"] = pd.to_numeric(expense_df["Expense Amount"], errors="coerce")
         expense_df["Date"] = expense_df["Date & Time"].str.split(" ").str[0]
         total_expense_today = expense_df[
             expense_df["Date"] == today_expense_str
@@ -112,13 +116,15 @@ if section == "📊 Today's Summary":
         total_expense_today = 0
 
     # ---------- OPENING BALANCE ----------
-    balance_df = pd.DataFrame(balance_sheet.get_all_records())
+    balance_records = balance_sheet.get_all_records()
+    balance_df = pd.DataFrame(balance_records)
+
     if not balance_df.empty:
         balance_df["Date"] = pd.to_datetime(balance_df["Date"], format="%d-%m-%Y")
         balance_df = balance_df.sort_values("Date")
-        opening_balance = balance_df.iloc[-1]["Closing Balance"]
+        opening_balance = int(balance_df.iloc[-1]["Closing Balance"])
     else:
-        opening_balance = 0  # first day
+        opening_balance = 0
 
     # ---------- CLOSING BALANCE ----------
     closing_balance = opening_balance + total_sales_today - total_expense_today
@@ -141,12 +147,13 @@ if section == "📊 Today's Summary":
 
     if st.button("📌 Save Closing Balance for Today"):
         balance_sheet.append_row([
-        today_sales_str,
-        int(opening_balance),
-        int(total_sales_today),
-        int(total_expense_today),
-        int(closing_balance),
-        now.strftime("%d/%m/%Y %H:%M")])
+            today_sales_str,
+            int(opening_balance),
+            int(total_sales_today),
+            int(total_expense_today),
+            int(closing_balance),
+            now.strftime("%d/%m/%Y %H:%M")
+        ])
         st.success("Closing balance saved successfully ✅")
 
 # =================================================
@@ -161,11 +168,12 @@ elif section == "🧾 Expense Entry":
         exp_time = st.time_input("Expense Time", value=now.time().replace(second=0, microsecond=0))
         exp_datetime = datetime.combine(exp_date, exp_time).strftime("%d/%m/%Y %H:%M")
 
-        category = st.selectbox("Category", [
-            "Groceries","Vegetables","Non-Veg","Milk","Banana Leaf",
-            "Maintenance","Electricity","Rent",
-            "Salary and Advance","Transportation","Others"
-        ])
+        category = st.selectbox(
+            "Category",
+            ["Groceries","Vegetables","Non-Veg","Milk","Banana Leaf",
+             "Maintenance","Electricity","Rent",
+             "Salary and Advance","Transportation","Others"]
+        )
 
         sub_category = st.text_input("Sub-Category")
         amount = st.number_input("Expense Amount", min_value=0.0, step=1.0)
@@ -256,31 +264,48 @@ elif section == "🧑‍🍳 Attendance":
 # 📊 EXPENSE ANALYTICS
 # =================================================
 elif section == "📊 Expense Analytics":
+
     st.markdown("## 📊 Expense Analytics")
-    df = pd.DataFrame(expense_sheet.get_all_records())
-    df["Expense Amount"] = pd.to_numeric(df["Expense Amount"])
-    st.line_chart(df.groupby(df["Date & Time"].str[:10])["Expense Amount"].sum())
+
+    records = expense_sheet.get_all_records()
+    if not records:
+        st.info("No expense data available yet.")
+    else:
+        df = pd.DataFrame(records)
+        df["Expense Amount"] = pd.to_numeric(df["Expense Amount"], errors="coerce")
+        df["Date"] = df["Date & Time"].str.split(" ").str[0]
+        st.line_chart(df.groupby("Date")["Expense Amount"].sum())
 
 # =================================================
 # 📈 ATTENDANCE ANALYTICS
 # =================================================
 elif section == "📈 Attendance Analytics":
+
     st.markdown("## 📈 Attendance Analytics")
-    df = pd.DataFrame(attendance_sheet.get_all_records())
-    df["absent_count"] = (
-        (df["Morning"] == "✖").astype(int) +
-        (df["Afternoon"] == "✖").astype(int) +
-        (df["Night"] == "✖").astype(int)
-    )
-    st.bar_chart(df.groupby("Employee Name")["absent_count"].sum())
+
+    records = attendance_sheet.get_all_records()
+    if not records:
+        st.info("No attendance data available yet.")
+    else:
+        df = pd.DataFrame(records)
+        df["absent_count"] = (
+            (df["Morning"] == "✖").astype(int) +
+            (df["Afternoon"] == "✖").astype(int) +
+            (df["Night"] == "✖").astype(int)
+        )
+        st.bar_chart(df.groupby("Employee Name")["absent_count"].sum())
 
 # =================================================
 # 📊 SALES ANALYTICS
 # =================================================
 elif section == "📊 Sales Analytics":
+
     st.markdown("## 📊 Sales Analytics")
-    df = pd.DataFrame(sales_sheet.get_all_records())
-    df["Cash Total"] = pd.to_numeric(df["Cash Total"])
-    st.bar_chart(df.groupby("Store")["Cash Total"].sum())
 
-
+    records = sales_sheet.get_all_records()
+    if not records:
+        st.info("No sales data available yet.")
+    else:
+        df = pd.DataFrame(records)
+        df["Cash Total"] = pd.to_numeric(df["Cash Total"], errors="coerce")
+        st.bar_chart(df.groupby("Store")["Cash Total"].sum())
