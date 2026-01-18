@@ -299,6 +299,7 @@ elif section == "📊 Expense Analytics":
     st.subheader("👤 Expense By")
     st.bar_chart(df.groupby("Expense By")["Expense Amount"].sum())
 
+
 # =================================================
 # 📈 ATTENDANCE ANALYTICS
 # =================================================
@@ -323,23 +324,25 @@ elif section == "📈 Attendance Analytics":
     current_year = now.year
     current_month = now.month
 
-    # ---------- Absence calculation ----------
-    df["absent_count"] = (
+    # ---------- Absence calculation (2 shifts) ----------
+    df["absent_shifts"] = (
         (df["Morning"] == "✖").astype(int) +
-        (df["Afternoon"] == "✖").astype(int) +
         (df["Night"] == "✖").astype(int)
     )
 
+    # Convert shifts → leave days
+    df["leave_days"] = df["absent_shifts"] / 2
+
     # =================================================
-    # 1️⃣ Monthly vs Yearly Leave Analysis
+    # 1️⃣ Monthly vs Yearly Leave Analysis (IN DAYS)
     # =================================================
-    st.subheader("📊 Leave Analysis")
+    st.subheader("📊 Leave Analysis (Days)")
 
     view_type = st.radio(
         "View leave data for:",
         ["Current Month", "Current Year"],
         horizontal=True,
-        index=0  # Default = Monthly
+        index=0
     )
 
     if view_type == "Current Month":
@@ -347,14 +350,13 @@ elif section == "📈 Attendance Analytics":
             (df["year"] == current_year) &
             (df["month"] == current_month)
         ]
-        title = "Leaves taken per employee (Current Month)"
-
+        title = "Leave days taken per employee (Current Month)"
     else:
         temp = df[df["year"] == current_year]
-        title = "Leaves taken per employee (Current Year)"
+        title = "Leave days taken per employee (Current Year)"
 
     leave_df = (
-        temp.groupby("Employee Name")["absent_count"]
+        temp.groupby("Employee Name")["leave_days"]
         .sum()
         .sort_values(ascending=False)
     )
@@ -365,18 +367,18 @@ elif section == "📈 Attendance Analytics":
     st.markdown("---")
 
     # =================================================
-    # 2️⃣ Shift-wise Absentee Breakdown
+    # 2️⃣ Shift-wise Absentee Breakdown (2 SHIFTS)
     # =================================================
     st.subheader("⏰ Shift-wise Absentee Breakdown")
 
     shift_absent = pd.Series({
         "Morning": (df["Morning"] == "✖").sum(),
-        "Afternoon": (df["Afternoon"] == "✖").sum(),
         "Night": (df["Night"] == "✖").sum(),
     }).sort_values(ascending=False)
 
     st.caption("Total absentees per shift (all time)")
     st.bar_chart(shift_absent)
+
 
 
 # =================================================
@@ -390,6 +392,7 @@ elif section == "📊 Sales Analytics":
     else:
         df["Cash Total"] = pd.to_numeric(df["Cash Total"], errors="coerce")
         st.bar_chart(df.groupby("Store")["Cash Total"].sum())
+
 
 
 
