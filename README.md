@@ -9,63 +9,48 @@ There was no visibility into daily performance, profits, or cash position — on
 
 As the business grew, this manual process became:
 
-Error-prone
-
-Time-consuming
-
-Impossible to analyze
-
-Completely disconnected from decision-making
+- Error-prone
+- Time-consuming
+- Impossible to analyze
+- Completely disconnected from decision-making
 
 The owner wanted a simple, mobile-friendly solution that:
+- Replaced pen-and-paper entries
+- Required no technical knowledge
+- Worked seamlessly on an Android phone
+- Provided real-time visibility into business performance
 
-Replaced pen-and-paper entries
+This project is the result of that initiative. A full digital data entry + analytics pipeline tailored specifically for an SMB restaurant. 
+https://www.google.com/maps/place/monisha+tiffin+centre/data=!4m2!3m1!1s0x3a52662014ac5a59:0xfdde7cced4ca755c?sa=X&ved=1t:242&ictx=111
 
-Required no technical knowledge
-
-Worked seamlessly on an Android phone
-
-Provided real-time visibility into business performance
-
-This project is the result of that initiative — a full digital data entry + analytics pipeline tailored specifically for a restaurant SMB.
-
-🎯 Objectives
+## Objectives
 
 The primary goals of this system were:
+- Digitize daily operational data entry
+- Minimize user friction (large buttons, mobile-first UI)
+- Centralize data in a single source of truth
+- Provide real-time analytics without complex tools
+- Track actual cash position, not just daily profit
 
-Digitize daily operational data entry
-
-Minimize user friction (large buttons, mobile-first UI)
-
-Centralize data in a single source of truth
-
-Provide real-time analytics without complex tools
-
-Track actual cash position, not just daily profit
-
-🛠️ Solution Overview
+## Solution Overview
 
 The solution is a Streamlit-based web application backed by Google Sheets as a lightweight database.
 
 Why this stack?
 Component	Reason
-Streamlit	Rapid UI development, mobile-friendly, simple deployment
-Google Sheets	Familiar to SMB users, cloud-based, no database setup
+Streamlit	Rapid UI development, mobile-friendly, simple deployment. Google Sheets was Familiar to the SMB users, cloud-based, no database setup
 Python + Pandas	Reliable analytics and data transformations
 Service Account Auth	Secure access without user login complexity
 
 The app is deployed on Streamlit Cloud and accessed via a browser, often saved to the phone’s home screen like an app.
 
-🔐 Security Model
+## Security Model
 
-PIN-based access (stored securely using Streamlit Secrets)
-
-Google Sheets access restricted via service account
-
-No public credentials exposed in the repository
-
-📊 Core Functional Modules
-1️⃣ Expense Management
+- PIN-based access (stored securely using Streamlit Secrets)
+- Google Sheets access restricted via service account
+- No public credentials exposed in the repository
+- Core Functional Modules
+- Expense Management
 
 Allows daily recording of expenses with:
 
