@@ -238,7 +238,15 @@ elif section == "📊 Expense Analytics":
     st.metric("💸 Total Expense", f"₹ {df['Expense Amount'].sum():,.0f}")
 
     st.subheader("📂 Category-wise Expense")
-    st.bar_chart(df.groupby("Category")["Expense Amount"].sum())
+
+    cat_expense = (
+        df.groupby("Category")["Expense Amount"]
+        .sum()
+        .sort_values(ascending=False)
+    )
+    
+    st.bar_chart(cat_expense)
+
 
     st.subheader("📈 Expense Trend")
     trend = st.radio("Trend Type", ["Daily","Weekly","Monthly"], horizontal=True)
@@ -283,4 +291,5 @@ elif section == "📊 Sales Analytics":
     else:
         df["Cash Total"] = pd.to_numeric(df["Cash Total"], errors="coerce")
         st.bar_chart(df.groupby("Store")["Cash Total"].sum())
+
 
