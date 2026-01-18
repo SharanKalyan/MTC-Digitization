@@ -17,6 +17,7 @@ if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
 if not st.session_state.authenticated:
+    st.markdown("### Welcome! ")
     st.markdown("### 🔒 Enter PIN to Access")
 
     with st.form("pin_form"):
@@ -309,3 +310,4 @@ elif section == "📊 Sales Analytics":
         df = pd.DataFrame(records)
         df["Cash Total"] = pd.to_numeric(df["Cash Total"], errors="coerce")
         st.bar_chart(df.groupby("Store")["Cash Total"].sum())
+
