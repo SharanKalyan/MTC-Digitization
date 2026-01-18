@@ -244,7 +244,8 @@ elif section == "📊 Expense Analytics":
         .sum()
         .sort_values(ascending=False)
     )
-    
+
+    st.subheader(cat_expense)
     st.bar_chart(cat_expense)
 
 
@@ -291,5 +292,6 @@ elif section == "📊 Sales Analytics":
     else:
         df["Cash Total"] = pd.to_numeric(df["Cash Total"], errors="coerce")
         st.bar_chart(df.groupby("Store")["Cash Total"].sum())
+
 
 
