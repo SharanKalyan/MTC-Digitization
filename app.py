@@ -62,7 +62,7 @@ now = datetime.now(ist)
 # -------------------------------------------------
 # Navigation (Dropdown)
 # -------------------------------------------------
-st.markdown("### 📍 Select Section")
+st.markdown("### 📢 Select Section")
 
 section = st.selectbox(
     "",
@@ -310,4 +310,5 @@ elif section == "📊 Sales Analytics":
         df = pd.DataFrame(records)
         df["Cash Total"] = pd.to_numeric(df["Cash Total"], errors="coerce")
         st.bar_chart(df.groupby("Store")["Cash Total"].sum())
+
 
