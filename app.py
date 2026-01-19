@@ -289,25 +289,25 @@ elif section == "💰 Sales Entry":
         submit = st.form_submit_button("✅ Submit Sales")
 
     if submit:
-    rows = sales_sheet.get_all_values()
+        rows = sales_sheet.get_all_values()
 
-    # Delete existing entry for same Date + Store + Time Slot
-    for i in reversed([
-        idx for idx, r in enumerate(rows[1:], start=2)
-        if r[0] == sale_date and r[1] == store and r[2] == time_slot
-    ]):
-        sales_sheet.delete_rows(i)
+        # Delete existing entry for same Date + Store + Time Slot
+        for i in reversed([
+            idx for idx, r in enumerate(rows[1:], start=2)
+            if r[0] == sale_date and r[1] == store and r[2] == time_slot
+        ]):
+            sales_sheet.delete_rows(i)
+    
+        # Insert fresh entry
+        sales_sheet.append_row([
+            sale_date,
+            store,
+            time_slot,
+            float(cash_total),
+            now.strftime("%d/%m/%Y %H:%M")
+        ])
 
-    # Insert fresh entry
-    sales_sheet.append_row([
-        sale_date,
-        store,
-        time_slot,
-        float(cash_total),
-        now.strftime("%d/%m/%Y %H:%M")
-    ])
-
-    st.success("Sales recorded successfully ✅")
+        st.success("Sales recorded successfully ✅")
 
 
 
@@ -519,6 +519,7 @@ elif section == "📊 Sales Analytics":
     else:
         df["Cash Total"] = pd.to_numeric(df["Cash Total"], errors="coerce")
         st.bar_chart(df.groupby("Store")["Cash Total"].sum())
+
 
 
 
