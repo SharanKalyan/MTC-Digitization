@@ -535,7 +535,7 @@ elif section == "📊 Sales Analytics":
     current_month = now.month
 
     # =================================================
-    # 1️⃣ Store-wise Total Sales (existing view)
+    # 1️⃣ Store-wise Total Sales
     # =================================================
     st.subheader("🏪 Store-wise Total Sales")
 
@@ -550,7 +550,7 @@ elif section == "📊 Sales Analytics":
     st.markdown("---")
 
     # =================================================
-    # 2️⃣ Day-wise Sales for Current Month (Grouped Bars)
+    # 2️⃣ Day-wise Sales for Current Month (SIDE-BY-SIDE)
     # =================================================
     st.subheader("📅 Day-wise Sales (Current Month)")
 
@@ -582,6 +582,7 @@ elif section == "📊 Sales Analytics":
                 title="Date",
                 axis=alt.Axis(labelAngle=-45)
             ),
+            xOffset=alt.XOffset("Store:N"),  # ✅ KEY FIX: forces side-by-side bars
             y=alt.Y(
                 "Cash Total:Q",
                 title="Sales Amount"
@@ -600,6 +601,8 @@ elif section == "📊 Sales Analytics":
     )
 
     st.altair_chart(chart, use_container_width=True)
+
+
 
 
 
