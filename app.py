@@ -85,53 +85,81 @@ if section == "📊 Today's Summary":
 
     today_sales_str = now.strftime("%d-%m-%Y")
     today_expense_str = now.strftime("%d/%m/%Y")
+    today_date = now.date()
 
     # ---------- SALES ----------
     sales_df = pd.DataFrame(sales_sheet.get_all_records())
     if not sales_df.empty:
         sales_df["Cash Total"] = pd.to_numeric(sales_df["Cash Total"], errors="coerce")
         today_sales = sales_df[sales_df["Date"] == today_sales_str]
-        total_sales_today = today_sales["Cash Total"].sum()
+        total_sales_today = float(today_sales["Cash Total"].sum())
     else:
-        total_sales_today = 0
+        total_sales_today = 0.0
 
     # ---------- EXPENSE ----------
     expense_df = pd.DataFrame(expense_sheet.get_all_records())
     if not expense_df.empty:
         expense_df["Expense Amount"] = pd.to_numeric(expense_df["Expense Amount"], errors="coerce")
         expense_df["Date"] = expense_df["Date & Time"].str.split(" ").str[0]
-        total_expense_today = expense_df[
-            expense_df["Date"] == today_expense_str
-        ]["Expense Amount"].sum()
+        total_expense_today = float(
+            expense_df[expense_df["Date"] == today_expense_str]["Expense Amount"].sum()
+        )
     else:
-        total_expense_today = 0
+        total_expense_today = 0.0
 
-    # ---------- OPENING BALANCE ----------
+    # ---------- OPENING BALANCE (PREVIOUS DAY ONLY) ----------
     balance_df = pd.DataFrame(balance_sheet.get_all_records())
+
     if not balance_df.empty:
-        opening_balance = int(balance_df.iloc[-1]["Closing Balance"])
-        st.markdown(opening_balance)
+        balance_df["date"] = pd.to_datetime(
+            balance_df["Date"],
+            format="%d-%m-%Y",
+            errors="coerce"
+        ).dt.date
+
+        prev_days = balance_df[balance_df["date"] < today_date]
+
+        if not prev_days.empty:
+            opening_balance = int(
+                prev_days.sort_values("date").iloc[-1]["Closing Balance"]
+            )
+        else:
+            opening_balance = 0
     else:
         opening_balance = 0
 
+    # ---------- CLOSING BALANCE ----------
     closing_balance = opening_balance + total_sales_today - total_expense_today
 
+    # ---------- UI ----------
     st.metric("📥 Opening Balance", f"₹ {opening_balance:,.0f}")
     st.metric("💵 Total Sales Today", f"₹ {total_sales_today:,.0f}")
     st.metric("💸 Total Expense Today", f"₹ {total_expense_today:,.0f}")
     st.metric("💰 Balance Remaining Today", f"₹ {closing_balance:,.0f}")
 
+    # ---------- SAVE CLOSING BALANCE (ONCE PER DAY) ----------
     if st.button("📌 Save Closing Balance for Today"):
-        balance_sheet.append_row([
-        today_sales_str,
-        int(opening_balance),
-        float(total_sales_today),
-        float(total_expense_today),
-        float(closing_balance),
-        now.strftime("%d/%m/%Y %H:%M")
-        ])
-   
-        st.success("Closing balance saved successfully ✅")
+
+        if not balance_df.empty:
+            already_saved = balance_df[
+                balance_df["date"] == today_date
+            ]
+        else:
+            already_saved = pd.DataFrame()
+
+        if not already_saved.empty:
+            st.warning("Closing balance for today is already saved ❗")
+        else:
+            balance_sheet.append_row([
+                today_sales_str,
+                int(opening_balance),
+                float(total_sales_today),
+                float(total_expense_today),
+                float(closing_balance),
+                now.strftime("%d/%m/%Y %H:%M")
+            ])
+            st.success("Closing balance saved successfully ✅")
+
 
 # =================================================
 # 🧾 EXPENSE ENTRY
@@ -393,6 +421,7 @@ elif section == "📊 Sales Analytics":
     else:
         df["Cash Total"] = pd.to_numeric(df["Cash Total"], errors="coerce")
         st.bar_chart(df.groupby("Store")["Cash Total"].sum())
+
 
 
 
