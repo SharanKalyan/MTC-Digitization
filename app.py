@@ -160,36 +160,119 @@ if section == "📊 Today's Summary":
             ])
             st.success("Closing balance saved successfully ✅")
 
-
 # =================================================
-# 🧾 EXPENSE ENTRY
+# 🧾 EXPENSE ENTRY (BULK / GRID STYLE)
 # =================================================
 elif section == "🧾 Expense Entry":
 
     st.markdown("## 🧾 Expense Entry")
 
-    with st.form("expense_form"):
-        exp_date = st.date_input("Expense Date", value=now.date())
-        exp_time = st.time_input("Expense Time", value=now.time().replace(second=0, microsecond=0))
+    EXPENSE_CATEGORIES = [
+        "Groceries",
+        "Vegetables",
+        "Non-Veg",
+        "Milk",
+        "Banana Leaf",
+        "Maintenance",
+        "Electricity",
+        "Rent",
+        "Salary and Advance",
+        "Transportation",
+        "Others"
+    ]
+
+    with st.form("bulk_expense_form"):
+
+        # ---------- Date & Time ----------
+        col1, col2 = st.columns(2)
+        with col1:
+            exp_date = st.date_input("Expense Date", value=now.date())
+        with col2:
+            exp_time = st.time_input(
+                "Expense Time",
+                value=now.time().replace(second=0, microsecond=0)
+            )
+
         exp_datetime = datetime.combine(exp_date, exp_time).strftime("%d/%m/%Y %H:%M")
 
-        category = st.selectbox(
-            "Category",
-            ["Groceries","Vegetables","Non-Veg","Milk","Banana Leaf",
-             "Maintenance","Electricity","Rent",
-             "Salary and Advance","Transportation","Others"]
-        )
+        st.markdown("---")
+        st.markdown("### 🧾 Enter Expenses (tick the category you want to submit)")
 
-        sub_category = st.text_input("Sub-Category")
-        amount = st.number_input("Expense Amount", min_value=0.0, step=1.0)
-        payment = st.selectbox("Payment Mode", ["Cash","UPI","Cheque"])
-        by = st.selectbox("Expense By", ["RK","AR","YS"])
+        expense_rows = []
 
-        submit = st.form_submit_button("✅ Submit Expense")
+        for cat in EXPENSE_CATEGORIES:
+            c1, c2, c3, c4, c5, c6 = st.columns([0.5, 2, 2, 1.5, 1.5, 1.5])
 
+            with c1:
+                selected = st.checkbox("", key=f"sel_{cat}")
+
+            with c2:
+                st.markdown(f"**{cat}**")
+
+            with c3:
+                sub_cat = st.text_input(
+                    "Sub-category",
+                    key=f"sub_{cat}",
+                    label_visibility="collapsed"
+                )
+
+            with c4:
+                amount = st.number_input(
+                    "Amount",
+                    min_value=0.0,
+                    step=1.0,
+                    key=f"amt_{cat}",
+                    label_visibility="collapsed"
+                )
+
+            with c5:
+                payment = st.selectbox(
+                    "Payment",
+                    ["Cash", "UPI", "Cheque"],
+                    key=f"pay_{cat}",
+                    label_visibility="collapsed"
+                )
+
+            with c6:
+                by = st.selectbox(
+                    "Expense By",
+                    ["RK", "AR", "YS"],
+                    key=f"by_{cat}",
+                    label_visibility="collapsed"
+                )
+
+            expense_rows.append({
+                "selected": selected,
+                "category": cat,
+                "sub_category": sub_cat,
+                "amount": amount,
+                "payment": payment,
+                "by": by
+            })
+
+        submit = st.form_submit_button("✅ Submit Expenses")
+
+    # ---------- SAVE ----------
     if submit:
-        expense_sheet.append_row([exp_datetime, category, sub_category, amount, payment, by])
-        st.success("Expense recorded successfully ✅")
+        rows_added = 0
+
+        for row in expense_rows:
+            if row["selected"] and row["amount"] > 0:
+                expense_sheet.append_row([
+                    exp_datetime,
+                    row["category"],
+                    row["sub_category"],
+                    float(row["amount"]),
+                    row["payment"],
+                    row["by"]
+                ])
+                rows_added += 1
+
+        if rows_added > 0:
+            st.success(f"✅ {rows_added} expense(s) recorded successfully")
+        else:
+            st.warning("⚠️ No expenses selected or amount entered")
+
 
 # =================================================
 # 💰 SALES ENTRY
@@ -421,6 +504,7 @@ elif section == "📊 Sales Analytics":
     else:
         df["Cash Total"] = pd.to_numeric(df["Cash Total"], errors="coerce")
         st.bar_chart(df.groupby("Store")["Cash Total"].sum())
+
 
 
 
