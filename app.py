@@ -110,6 +110,7 @@ if section == "📊 Today's Summary":
     balance_df = pd.DataFrame(balance_sheet.get_all_records())
     if not balance_df.empty:
         opening_balance = int(balance_df.iloc[-1]["Closing Balance"])
+        print(openning_balance)
     else:
         opening_balance = 0
 
@@ -392,6 +393,7 @@ elif section == "📊 Sales Analytics":
     else:
         df["Cash Total"] = pd.to_numeric(df["Cash Total"], errors="coerce")
         st.bar_chart(df.groupby("Store")["Cash Total"].sum())
+
 
 
 
