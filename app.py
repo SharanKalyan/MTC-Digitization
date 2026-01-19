@@ -521,7 +521,7 @@ elif section == "📊 Sales Analytics":
 
     df = pd.DataFrame(records)
 
-    # ---------- Data Cleaning ----------
+    # ---------- Data cleaning ----------
     df["Cash Total"] = pd.to_numeric(df["Cash Total"], errors="coerce")
     df["date"] = pd.to_datetime(df["Date"], format="%d-%m-%Y", errors="coerce")
 
@@ -549,7 +549,7 @@ elif section == "📊 Sales Analytics":
     st.markdown("---")
 
     # =================================================
-    # 2️⃣ Day-wise Sales (Current Month) – SIDE-BY-SIDE
+    # 2️⃣ Day-wise Sales for Current Month (SIDE-BY-SIDE)
     # =================================================
     st.subheader("📅 Day-wise Sales (Current Month)")
 
@@ -581,11 +581,10 @@ elif section == "📊 Sales Analytics":
                 title="Date",
                 axis=alt.Axis(labelAngle=-45)
             ),
-            xOffset=alt.XOffset("Store:N"),  # ✅ forces side-by-side bars
+            xOffset=alt.XOffset("Store:N"),  # ✅ KEY FIX: forces side-by-side bars
             y=alt.Y(
                 "Cash Total:Q",
-                title="Sales Amount",
-                stack=None  # ✅ disables stacking (CRITICAL)
+                title="Sales Amount"
             ),
             color=alt.Color(
                 "Store:N",
@@ -593,11 +592,11 @@ elif section == "📊 Sales Analytics":
             ),
             tooltip=[
                 alt.Tooltip("Sale Date:T", title="Date"),
-                alt.Tooltip("Store:N", title="Store"),
+                alt.Tooltip("Store:N"),
                 alt.Tooltip("Cash Total:Q", title="Sales")
             ]
         )
-        .properties(height=420)
+        .properties(height=400)
     )
 
     st.altair_chart(chart, use_container_width=True)
