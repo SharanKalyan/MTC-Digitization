@@ -513,12 +513,95 @@ elif section == "📈 Attendance Analytics":
 # =================================================
 elif section == "📊 Sales Analytics":
 
-    df = pd.DataFrame(sales_sheet.get_all_records())
-    if df.empty:
+    st.markdown("## 📊 Sales Analytics")
+
+    records = sales_sheet.get_all_records()
+    if not records:
         st.info("No sales data.")
-    else:
-        df["Cash Total"] = pd.to_numeric(df["Cash Total"], errors="coerce")
-        st.bar_chart(df.groupby("Store")["Cash Total"].sum())
+        st.stop()
+
+    df = pd.DataFrame(records)
+
+    # ---------- Data cleaning ----------
+    df["Cash Total"] = pd.to_numeric(df["Cash Total"], errors="coerce")
+    df["date"] = pd.to_datetime(df["Date"], format="%d-%m-%Y", errors="coerce")
+
+    df = df.dropna(subset=["date", "Cash Total"])
+
+    df["year"] = df["date"].dt.year
+    df["month"] = df["date"].dt.month
+
+    current_year = now.year
+    current_month = now.month
+
+    # =================================================
+    # 1️⃣ Store-wise Total Sales (existing view)
+    # =================================================
+    st.subheader("🏪 Store-wise Total Sales")
+
+    store_total = (
+        df.groupby("Store")["Cash Total"]
+        .sum()
+        .sort_values(ascending=False)
+    )
+
+    st.bar_chart(store_total)
+
+    st.markdown("---")
+
+    # =================================================
+    # 2️⃣ Day-wise Sales for Current Month (Grouped Bars)
+    # =================================================
+    st.subheader("📅 Day-wise Sales (Current Month)")
+
+    month_df = df[
+        (df["year"] == current_year) &
+        (df["month"] == current_month)
+    ]
+
+    if month_df.empty:
+        st.info("No sales data for the current month.")
+        st.stop()
+
+    day_store_df = (
+        month_df
+        .groupby([month_df["date"].dt.date, "Store"])["Cash Total"]
+        .sum()
+        .reset_index()
+        .rename(columns={"date": "Sale Date"})
+    )
+
+    import altair as alt
+
+    chart = (
+        alt.Chart(day_store_df)
+        .mark_bar()
+        .encode(
+            x=alt.X(
+                "Sale Date:T",
+                title="Date",
+                axis=alt.Axis(labelAngle=-45)
+            ),
+            y=alt.Y(
+                "Cash Total:Q",
+                title="Sales Amount"
+            ),
+            color=alt.Color(
+                "Store:N",
+                title="Store"
+            ),
+            tooltip=[
+                alt.Tooltip("Sale Date:T", title="Date"),
+                alt.Tooltip("Store:N"),
+                alt.Tooltip("Cash Total:Q", title="Sales")
+            ]
+        )
+        .properties(height=400)
+    )
+
+    st.altair_chart(chart, use_container_width=True)
+
+
 
 
 
