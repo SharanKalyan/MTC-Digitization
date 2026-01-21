@@ -483,6 +483,53 @@ elif section == "📈 Attendance Analytics":
         hide_index=True
     )
 
+        st.markdown("---")
+
+    # =================================================
+    # 📋 Daily Shift-wise Absentees (TABLE)
+    # =================================================
+    st.subheader("📋 Daily Shift-wise Absentees (Detailed View)")
+
+    table_rows = []
+
+    # Ensure data is sorted by date
+    df_sorted = df.sort_values("date")
+
+    for day, day_df in df_sorted.groupby(df_sorted["date"].dt.date):
+
+        # Morning shift absentees
+        morning_absent = day_df[
+            day_df["Morning"] == "✖"
+        ]["Employee Name"].tolist()
+
+        table_rows.append({
+            "Date": day.strftime("%d/%m/%Y"),
+            "Shift": "Morning",
+            "Absentees Count": len(morning_absent),
+            "Employee Names": ", ".join(morning_absent) if morning_absent else "-"
+        })
+
+        # Night shift absentees
+        night_absent = day_df[
+            day_df["Night"] == "✖"
+        ]["Employee Name"].tolist()
+
+        table_rows.append({
+            "Date": day.strftime("%d/%m/%Y"),
+            "Shift": "Night",
+            "Absentees Count": len(night_absent),
+            "Employee Names": ", ".join(night_absent) if night_absent else "-"
+        })
+
+    absentee_table_df = pd.DataFrame(table_rows)
+
+    st.dataframe(
+        absentee_table_df,
+        use_container_width=True,
+        hide_index=True
+    )
+
+
 # =================================================
 # 📊 SALES ANALYTICS
 # =================================================
@@ -576,4 +623,5 @@ elif section == "📊 Sales Analytics":
     )
 
     st.altair_chart(chart, use_container_width=True)
+
 
