@@ -445,89 +445,104 @@ elif section == "📈 Attendance Analytics":
     df["date"] = pd.to_datetime(df["Date"], format="%d/%m/%Y", errors="coerce")
     df = df.dropna(subset=["date"])
 
-    # Sort by date for readability
-    df = df.sort_values("date")
+    df["year"] = df["date"].dt.year
+    df["month"] = df["date"].dt.month
 
-    # =================================================
-    # 📋 Daily Shift-wise Absentees (TABLE VIEW)
-    # =================================================
-    st.subheader("📋 Daily Shift-wise Absentees")
+    current_year = now.year
+    current_month = now.month
 
-    rows = []
-
-    for day, day_df in df.groupby(df["date"].dt.date):
-
-        # Morning shift
-        morning_absent = day_df[day_df["Morning"] == "✖"]["Employee Name"].tolist()
-        rows.append({
-            "Date": day.strftime("%d/%m/%Y"),
-            "Shift": "Morning",
-            "Absentees Count": len(morning_absent),
-            "Employee Names": ", ".join(morning_absent) if morning_absent else "-"
-        })
-
-        # Night shift
-        night_absent = day_df[day_df["Night"] == "✖"]["Employee Name"].tolist()
-        rows.append({
-            "Date": day.strftime("%d/%m/%Y"),
-            "Shift": "Night",
-            "Absentees Count": len(night_absent),
-            "Employee Names": ", ".join(night_absent) if night_absent else "-"
-        })
-
-    result_df = pd.DataFrame(rows)
-
-    st.dataframe(
-        result_df,
-        use_container_width=True,
-        hide_index=True
+    # ---------- Absence calculation (2 shifts: Morning & Night) ----------
+    df["absent_shifts"] = (
+        (df["Morning"] == "✖").astype(int) +
+        (df["Night"] == "✖").astype(int)
     )
+
+    # Convert shifts → leave days (2 shifts = 1 day)
+    df["leave_days"] = df["absent_shifts"] / 2
+
+    # =================================================
+    # 1️⃣ Monthly vs Yearly Leave Analysis (IN DAYS)
+    # =================================================
+    st.subheader("📊 Leave Analysis (Days)")
+
+    view_type = st.radio(
+        "View leave data for:",
+        ["Current Month", "Current Year"],
+        horizontal=True,
+        index=0
+    )
+
+    if view_type == "Current Month":
+        temp = df[
+            (df["year"] == current_year) &
+            (df["month"] == current_month)
+        ]
+        title = "Leave days taken per employee (Current Month)"
+    else:
+        temp = df[df["year"] == current_year]
+        title = "Leave days taken per employee (Current Year)"
+
+    leave_df = (
+        temp.groupby("Employee Name")["leave_days"]
+        .sum()
+        .sort_values(ascending=False)
+    )
+
+    st.caption(title)
+    st.bar_chart(leave_df)
 
     st.markdown("---")
 
     # =================================================
-    # 📋 Daily Shift-wise Absentees (TABLE)
+    # 2️⃣ Shift-wise Absentee Breakdown (2 SHIFTS)
     # =================================================
-    st.subheader("📋 Daily Shift-wise Absentees (Detailed View)")
+    st.subheader("⏰ Shift-wise Absentee Breakdown")
+
+    shift_absent = pd.Series({
+        "Morning": (df["Morning"] == "✖").sum(),
+        "Night": (df["Night"] == "✖").sum(),
+    }).sort_values(ascending=False)
+
+    st.caption("Total absentees per shift (all time)")
+    st.bar_chart(shift_absent)
+
+    st.markdown("---")
+
+    # =================================================
+    # 3️⃣ Day-wise Absentees by Shift (TABLE)
+    # =================================================
+    st.subheader("📋 Day-wise Absentees by Shift")
 
     table_rows = []
 
-    # Ensure data is sorted by date
-    df_sorted = df.sort_values("date")
+    for day, day_df in df.groupby(df["date"].dt.date):
 
-    for day, day_df in df_sorted.groupby(df_sorted["date"].dt.date):
+        # ---------- Morning ----------
+        morning_absent = day_df[day_df["Morning"] == "✖"]["Employee Name"].tolist()
+        if morning_absent:
+            table_rows.append({
+                "Date": day.strftime("%d/%m/%Y"),
+                "Shift": "Morning",
+                "Absent Count": len(morning_absent),
+                "Absent Employees": ", ".join(morning_absent)
+            })
 
-        # Morning shift absentees
-        morning_absent = day_df[
-            day_df["Morning"] == "✖"
-        ]["Employee Name"].tolist()
+        # ---------- Night ----------
+        night_absent = day_df[day_df["Night"] == "✖"]["Employee Name"].tolist()
+        if night_absent:
+            table_rows.append({
+                "Date": day.strftime("%d/%m/%Y"),
+                "Shift": "Night",
+                "Absent Count": len(night_absent),
+                "Absent Employees": ", ".join(night_absent)
+            })
 
-        table_rows.append({
-            "Date": day.strftime("%d/%m/%Y"),
-            "Shift": "Morning",
-            "Absentees Count": len(morning_absent),
-            "Employee Names": ", ".join(morning_absent) if morning_absent else "-"
-        })
-
-        # Night shift absentees
-        night_absent = day_df[
-            day_df["Night"] == "✖"
-        ]["Employee Name"].tolist()
-
-        table_rows.append({
-            "Date": day.strftime("%d/%m/%Y"),
-            "Shift": "Night",
-            "Absentees Count": len(night_absent),
-            "Employee Names": ", ".join(night_absent) if night_absent else "-"
-        })
-
-    absentee_table_df = pd.DataFrame(table_rows)
-
-    st.dataframe(
-        absentee_table_df,
-        use_container_width=True,
-        hide_index=True
-    )
+    if table_rows:
+        absentees_table = pd.DataFrame(table_rows)
+        absentees_table = absentees_table.sort_values("Date")
+        st.dataframe(absentees_table, use_container_width=True)
+    else:
+        st.info("No absentees recorded yet.")
 
 
 # =================================================
@@ -623,6 +638,7 @@ elif section == "📊 Sales Analytics":
     )
 
     st.altair_chart(chart, use_container_width=True)
+
 
 
 
