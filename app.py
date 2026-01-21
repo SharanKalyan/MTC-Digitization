@@ -461,7 +461,7 @@ elif section == "📈 Attendance Analytics":
     df["leave_days"] = df["absent_shifts"] / 2
 
     # =================================================
-    # 1️⃣ Monthly vs Yearly Leave Analysis (IN DAYS)
+    # 1️⃣ Monthly vs Yearly Leave Analysis (TABLE)
     # =================================================
     st.subheader("📊 Leave Analysis (Days)")
 
@@ -483,28 +483,33 @@ elif section == "📈 Attendance Analytics":
         title = "Leave days taken per employee (Current Year)"
 
     leave_df = (
-        temp.groupby("Employee Name")["leave_days"]
+        temp.groupby("Employee Name", as_index=False)["leave_days"]
         .sum()
-        .sort_values(ascending=False)
+        .sort_values("leave_days", ascending=False)
     )
 
+    leave_df = leave_df.rename(columns={
+        "Employee Name": "Employee",
+        "leave_days": "Leave Days"
+    })
+
     st.caption(title)
-    st.bar_chart(leave_df)
+    st.dataframe(leave_df, use_container_width=True)
 
     st.markdown("---")
 
     # =================================================
-    # 2️⃣ Shift-wise Absentee Breakdown (2 SHIFTS)
+    # 2️⃣ Shift-wise Absentee Breakdown (TABLE)
     # =================================================
     st.subheader("⏰ Shift-wise Absentee Breakdown")
 
-    shift_absent = pd.Series({
-        "Morning": (df["Morning"] == "✖").sum(),
-        "Night": (df["Night"] == "✖").sum(),
-    }).sort_values(ascending=False)
+    shift_table = pd.DataFrame([
+        {"Shift": "Morning", "Absent Count": (df["Morning"] == "✖").sum()},
+        {"Shift": "Night", "Absent Count": (df["Night"] == "✖").sum()},
+    ]).sort_values("Absent Count", ascending=False)
 
     st.caption("Total absentees per shift (all time)")
-    st.bar_chart(shift_absent)
+    st.dataframe(shift_table, use_container_width=True)
 
     st.markdown("---")
 
@@ -543,6 +548,7 @@ elif section == "📈 Attendance Analytics":
         st.dataframe(absentees_table, use_container_width=True)
     else:
         st.info("No absentees recorded yet.")
+
 
 
 # =================================================
@@ -635,3 +641,4 @@ elif section == "📊 Sales Analytics":
     ]].sort_values(["Date", "Store"])
     
     st.dataframe(final_df, use_container_width=True)
+
