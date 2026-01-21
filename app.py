@@ -587,58 +587,51 @@ elif section == "📊 Sales Analytics":
     st.markdown("---")
 
     # =================================================
-    # 2️⃣ Day-wise Sales for Current Month (SIDE-BY-SIDE)
+    # 2️⃣ Day-wise Sales for Current Month (TABLE)
     # =================================================
     st.subheader("📅 Day-wise Sales (Current Month)")
-
+    
     month_df = df[
         (df["year"] == current_year) &
         (df["month"] == current_month)
     ]
-
+    
     if month_df.empty:
         st.info("No sales data for the current month.")
         st.stop()
-
+    
+    # Aggregate sales per day & store
     day_store_df = (
         month_df
         .groupby([month_df["date"].dt.date, "Store"])["Cash Total"]
         .sum()
         .reset_index()
-        .rename(columns={"date": "Sale Date"})
     )
-
-    import altair as alt
-
-    chart = (
-        alt.Chart(day_store_df)
-        .mark_bar()
-        .encode(
-            x=alt.X(
-                "Sale Date:T",
-                title="Date",
-                axis=alt.Axis(labelAngle=-45)
-            ),
-            xOffset=alt.XOffset("Store:N"),  # ✅ KEY FIX: forces side-by-side bars
-            y=alt.Y(
-                "Cash Total:Q",
-                title="Sales Amount"
-            ),
-            color=alt.Color(
-                "Store:N",
-                title="Store"
-            ),
-            tooltip=[
-                alt.Tooltip("Sale Date:T", title="Date"),
-                alt.Tooltip("Store:N"),
-                alt.Tooltip("Cash Total:Q", title="Sales")
-            ]
-        )
-        .properties(height=400)
+    
+    # Calculate daily total
+    daily_total = (
+        day_store_df
+        .groupby("date")["Cash Total"]
+        .sum()
+        .reset_index()
+        .rename(columns={"Cash Total": "Overall Total"})
     )
-
-    st.altair_chart(chart, use_container_width=True)
-
-
-
-
+    
+    # Merge overall total back
+    final_df = day_store_df.merge(daily_total, on="date", how="left")
+    
+    # Show overall total only once per day (last store row)
+    final_df["Overall Total"] = final_df.groupby("date")["Overall Total"] \
+        .transform(lambda x: [""] * (len(x) - 1) + [x.iloc[0]])
+    
+    # Format date
+    final_df["Date"] = final_df["date"].apply(lambda x: x.strftime("%d/%m/%Y"))
+    
+    final_df = final_df[[
+        "Date",
+        "Store",
+        "Cash Total",
+        "Overall Total"
+    ]].sort_values(["Date", "Store"])
+    
+    st.dataframe(final_df, use_container_width=True)
