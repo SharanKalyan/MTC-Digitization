@@ -181,3 +181,23 @@ Potential next steps include:
 This project demonstrates how simple tools, when designed correctly, can bring real operational clarity to small businesses.
 
 It’s not about building complex systems, it’s about solving the right problem, in the right way, for the right user.
+
+
+## Screenshots 
+### Expense Data Entry Pipeline
+<img width="581" height="860" alt="Expense" src="https://github.com/user-attachments/assets/69243817-3eeb-4425-a645-b2000c362d33" />
+
+### Sales Data Entry Pipeline
+<img width="768" height="874" alt="Sales" src="https://github.com/user-attachments/assets/ba0713dc-d5a7-4c14-87c7-3b345fd91cb8" />
+
+### Sales Analytics 
+<img width="654" height="843" alt="SalesAnalytics" src="https://github.com/user-attachments/assets/a2af891a-8586-43de-8700-4e44b5532e88" />
+
+### Attendance Data Entry Pipeline
+<img width="369" height="742" alt="Attendance" src="https://github.com/user-attachments/assets/f3c71df7-a1ff-4055-9cf9-cf3d74171475" />
+
+### Attendance Analytics
+<img width="440" height="827" alt="AttendanceAnalytics" src="https://github.com/user-attachments/assets/f1f563f8-a73a-47fd-ba81-0e29c43c63c5" />
+
+
+
