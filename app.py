@@ -549,8 +549,6 @@ elif section == "📈 Attendance Analytics":
     else:
         st.info("No absentees recorded yet.")
 
-
-
 # =================================================
 # 📊 SALES ANALYTICS
 # =================================================
@@ -578,7 +576,7 @@ elif section == "📊 Sales Analytics":
     current_month = now.month
 
     # =================================================
-    # 1️⃣ Store-wise Sales (TOTAL / AVERAGE) - TABLE
+    # 1️⃣ Store-wise Sales (TOTAL / AVERAGE PER DAY) - TABLE
     # =================================================
     st.subheader("🏪 Store-wise Sales")
 
@@ -600,14 +598,22 @@ elif section == "📊 Sales Analytics":
         st.caption("Store-wise Total Sales")
 
     else:
+        # ---- Correct average: per-day average ----
+        daily_store_sales = (
+            df.groupby([df["date"].dt.date, "Store"])["Cash Total"]
+            .sum()
+            .reset_index()
+        )
+
         store_df = (
-            df.groupby("Store", as_index=False)["Cash Total"]
+            daily_store_sales
+            .groupby("Store", as_index=False)["Cash Total"]
             .mean()
-            .rename(columns={"Cash Total": "Average Sales"})
-            .sort_values("Average Sales", ascending=False)
+            .rename(columns={"Cash Total": "Average Daily Sales"})
+            .sort_values("Average Daily Sales", ascending=False)
             .reset_index(drop=True)
         )
-        st.caption("Store-wise Average Sales")
+        st.caption("Store-wise Average Daily Sales")
 
     st.dataframe(store_df, use_container_width=True)
 
@@ -635,7 +641,7 @@ elif section == "📊 Sales Analytics":
         .reset_index()
     )
 
-    # Calculate daily total
+    # Calculate daily overall total
     daily_total = (
         day_store_df
         .groupby("date")["Cash Total"]
