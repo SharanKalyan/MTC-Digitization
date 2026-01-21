@@ -578,17 +578,38 @@ elif section == "📊 Sales Analytics":
     current_month = now.month
 
     # =================================================
-    # 1️⃣ Store-wise Total Sales
+    # 1️⃣ Store-wise Sales (TOTAL / AVERAGE) - TABLE
     # =================================================
-    st.subheader("🏪 Store-wise Total Sales")
+    st.subheader("🏪 Store-wise Sales")
 
-    store_total = (
-        df.groupby("Store")["Cash Total"]
-        .sum()
-        .sort_values(ascending=False)
+    metric_type = st.radio(
+        "View:",
+        ["Total", "Average"],
+        horizontal=True,
+        index=0
     )
 
-    st.bar_chart(store_total)
+    if metric_type == "Total":
+        store_df = (
+            df.groupby("Store", as_index=False)["Cash Total"]
+            .sum()
+            .rename(columns={"Cash Total": "Total Sales"})
+            .sort_values("Total Sales", ascending=False)
+            .reset_index(drop=True)
+        )
+        st.caption("Store-wise Total Sales")
+
+    else:
+        store_df = (
+            df.groupby("Store", as_index=False)["Cash Total"]
+            .mean()
+            .rename(columns={"Cash Total": "Average Sales"})
+            .sort_values("Average Sales", ascending=False)
+            .reset_index(drop=True)
+        )
+        st.caption("Store-wise Average Sales")
+
+    st.dataframe(store_df, use_container_width=True)
 
     st.markdown("---")
 
@@ -596,16 +617,16 @@ elif section == "📊 Sales Analytics":
     # 2️⃣ Day-wise Sales for Current Month (TABLE)
     # =================================================
     st.subheader("📅 Day-wise Sales (Current Month)")
-    
+
     month_df = df[
         (df["year"] == current_year) &
         (df["month"] == current_month)
     ]
-    
+
     if month_df.empty:
         st.info("No sales data for the current month.")
         st.stop()
-    
+
     # Aggregate sales per day & store
     day_store_df = (
         month_df
@@ -613,7 +634,7 @@ elif section == "📊 Sales Analytics":
         .sum()
         .reset_index()
     )
-    
+
     # Calculate daily total
     daily_total = (
         day_store_df
@@ -622,24 +643,23 @@ elif section == "📊 Sales Analytics":
         .reset_index()
         .rename(columns={"Cash Total": "Overall Total"})
     )
-    
+
     # Merge overall total back
     final_df = day_store_df.merge(daily_total, on="date", how="left")
-    
+
     # Show overall total only once per day (last store row)
-    final_df["Overall Total"] = final_df.groupby("date")["Overall Total"] \
+    final_df["Overall Total"] = (
+        final_df.groupby("date")["Overall Total"]
         .transform(lambda x: [""] * (len(x) - 1) + [x.iloc[0]])
-    
+    )
+
     # Format date
     final_df["Date"] = final_df["date"].apply(lambda x: x.strftime("%d/%m/%Y"))
-    
-    final_df = final_df[[
-        "Date",
-        "Store",
-        "Cash Total",
-        "Overall Total"
-    ]].sort_values(["Date", "Store"])
-    
+
+    final_df = (
+        final_df[["Date", "Store", "Cash Total", "Overall Total"]]
+        .sort_values(["Date", "Store"])
+        .reset_index(drop=True)
+    )
+
     st.dataframe(final_df, use_container_width=True)
-
-
