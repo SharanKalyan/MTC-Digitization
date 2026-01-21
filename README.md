@@ -183,7 +183,7 @@ This project demonstrates how simple tools, when designed correctly, can bring r
 It’s not about building complex systems, it’s about solving the right problem, in the right way, for the right user.
 
 
-## Screenshots 
+## Screenshots (Dummy Data) 
 ### Expense Data Entry Pipeline
 <img width="581" height="860" alt="Expense" src="https://github.com/user-attachments/assets/69243817-3eeb-4425-a645-b2000c362d33" />
 
