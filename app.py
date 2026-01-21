@@ -483,7 +483,7 @@ elif section == "📈 Attendance Analytics":
         hide_index=True
     )
 
-        st.markdown("---")
+    st.markdown("---")
 
     # =================================================
     # 📋 Daily Shift-wise Absentees (TABLE)
@@ -623,5 +623,6 @@ elif section == "📊 Sales Analytics":
     )
 
     st.altair_chart(chart, use_container_width=True)
+
 
 
