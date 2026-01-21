@@ -485,7 +485,7 @@ elif section == "📈 Attendance Analytics":
     leave_df = (
         temp.groupby("Employee Name", as_index=False)["leave_days"]
         .sum()
-        .sort_values("leave_days", ascending=False)
+        .sort_values("leave_days", ascending=False).reset_index(drop=True)
     )
 
     leave_df = leave_df.rename(columns={
@@ -506,7 +506,7 @@ elif section == "📈 Attendance Analytics":
     shift_table = pd.DataFrame([
         {"Shift": "Morning", "Absent Count": (df["Morning"] == "✖").sum()},
         {"Shift": "Night", "Absent Count": (df["Night"] == "✖").sum()},
-    ]).sort_values("Absent Count", ascending=False)
+    ]).sort_values("Absent Count", ascending=False).reset_index(drop=True)
 
     st.caption("Total absentees per shift (all time)")
     st.dataframe(shift_table, use_container_width=True)
@@ -544,7 +544,7 @@ elif section == "📈 Attendance Analytics":
 
     if table_rows:
         absentees_table = pd.DataFrame(table_rows)
-        absentees_table = absentees_table.sort_values("Date")
+        absentees_table = absentees_table.sort_values("Date").reset_index(drop=True)
         st.dataframe(absentees_table, use_container_width=True)
     else:
         st.info("No absentees recorded yet.")
@@ -641,4 +641,5 @@ elif section == "📊 Sales Analytics":
     ]].sort_values(["Date", "Store"])
     
     st.dataframe(final_df, use_container_width=True)
+
 
