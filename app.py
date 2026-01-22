@@ -748,12 +748,12 @@ elif section == "📊 Sales Analytics":
     final_df["Total Expense Per Date"] = final_df["Total Expense Per Date"].fillna(0)
     
     # ---------- PROFIT ----------
-    final_df["Profit"] = (
+    final_df["Profit / Loss""] = (
         final_df["Total Sales Per Date"] - final_df["Total Expense Per Date"]
     )
     
     # ---------- Show totals only once per date ----------
-    for col in ["Total Sales Per Date", "Total Expense Per Date", "Profit"]:
+    for col in ["Total Sales Per Date", "Total Expense Per Date", "Profit / Loss""]:
         final_df[col] = (
             final_df.groupby("date")[col]
             .transform(lambda x: [""] * (len(x) - 1) + [x.iloc[0]])
@@ -769,10 +769,11 @@ elif section == "📊 Sales Analytics":
             "Cash Total",
             "Total Sales Per Date",
             "Total Expense Per Date",
-            "Profit"
+            "Profit / Loss"
         ]]
         .sort_values(["Date", "Store"])
         .reset_index(drop=True)
     )
     
     st.dataframe(final_df, use_container_width=True)
+
