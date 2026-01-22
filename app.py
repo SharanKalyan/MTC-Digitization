@@ -370,7 +370,7 @@ elif section == "🧑‍🍳 Attendance":
 
 
 # =================================================
-# 📊 EXPENSE ANALYTICS (ENHANCED)
+# 📊 EXPENSE ANALYTICS (TABLE-ONLY)
 # =================================================
 elif section == "📊 Expense Analytics":
 
@@ -381,8 +381,13 @@ elif section == "📊 Expense Analytics":
         st.info("No expense data available yet.")
         st.stop()
 
+    # ---------- Data Cleaning ----------
     df["Expense Amount"] = pd.to_numeric(df["Expense Amount"], errors="coerce")
-    df["datetime"] = pd.to_datetime(df["Date & Time"], format="%d/%m/%Y %H:%M", errors="coerce")
+    df["datetime"] = pd.to_datetime(
+        df["Date & Time"],
+        format="%d/%m/%Y %H:%M",
+        errors="coerce"
+    )
 
     df = df.dropna(subset=["datetime", "Expense Amount"])
 
@@ -391,41 +396,96 @@ elif section == "📊 Expense Analytics":
     df["month"] = df["datetime"].dt.to_period("M")
     df["year"] = df["datetime"].dt.year
 
+    # ---------- Total Expense ----------
     st.metric("💸 Total Expense", f"₹ {df['Expense Amount'].sum():,.0f}")
 
+    st.markdown("---")
+
+    # =================================================
+    # 1️⃣ Category-wise Expense (TABLE)
+    # =================================================
     st.subheader("📂 Category-wise Expense")
 
     cat_expense = (
-        df.groupby("Category")["Expense Amount"]
+        df.groupby("Category", as_index=False)["Expense Amount"]
         .sum()
-        .sort_values(ascending=False)
+        .sort_values("Expense Amount", ascending=False)
+        .reset_index(drop=True)
     )
 
-    st.subheader(cat_expense)
-    st.bar_chart(cat_expense)
+    st.dataframe(cat_expense, use_container_width=True)
 
+    st.markdown("---")
 
+    # =================================================
+    # 2️⃣ Expense Trend (TABLE)
+    # =================================================
     st.subheader("📈 Expense Trend")
-    trend = st.radio("Trend Type", ["Daily","Weekly","Monthly"], horizontal=True)
+
+    trend = st.radio(
+        "Trend Type",
+        ["Daily", "Weekly", "Monthly"],
+        horizontal=True
+    )
 
     if trend == "Daily":
-        trend_df = df.groupby("date")["Expense Amount"].sum()
+        trend_df = (
+            df.groupby("date", as_index=False)["Expense Amount"]
+            .sum()
+            .rename(columns={"date": "Date"})
+        )
     elif trend == "Weekly":
-        trend_df = df.groupby("week")["Expense Amount"].sum()
+        trend_df = (
+            df.groupby("week", as_index=False)["Expense Amount"]
+            .sum()
+            .rename(columns={"week": "Week"})
+        )
     else:
-        trend_df = df.groupby("month")["Expense Amount"].sum()
+        trend_df = (
+            df.groupby("month", as_index=False)["Expense Amount"]
+            .sum()
+            .rename(columns={"month": "Month"})
+        )
 
-    st.line_chart(trend_df)
+    trend_df = (
+        trend_df
+        .sort_values("Expense Amount", ascending=False)
+        .reset_index(drop=True)
+    )
 
+    st.dataframe(trend_df, use_container_width=True)
+
+    st.markdown("---")
+
+    # =================================================
+    # 3️⃣ Payment Mode-wise Expense (TABLE)
+    # =================================================
     st.subheader("💳 Payment Mode")
-    pie_df = df.groupby("Payment Mode")["Expense Amount"].sum()
-    fig, ax = plt.subplots()
-    ax.pie(pie_df, labels=pie_df.index, autopct="%1.1f%%")
-    st.pyplot(fig)
 
+    payment_df = (
+        df.groupby("Payment Mode", as_index=False)["Expense Amount"]
+        .sum()
+        .sort_values("Expense Amount", ascending=False)
+        .reset_index(drop=True)
+    )
+
+    st.dataframe(payment_df, use_container_width=True)
+
+    st.markdown("---")
+
+    # =================================================
+    # 4️⃣ Expense By (TABLE)
+    # =================================================
     st.subheader("👤 Expense By")
-    st.bar_chart(df.groupby("Expense By")["Expense Amount"].sum())
 
+    by_df = (
+        df.groupby("Expense By", as_index=False)["Expense Amount"]
+        .sum()
+        .sort_values("Expense Amount", ascending=False)
+        .reset_index(drop=True)
+    )
+
+    st.dataframe(by_df, use_container_width=True)
 
 # =================================================
 # 📈 ATTENDANCE ANALYTICS
@@ -669,3 +729,4 @@ elif section == "📊 Sales Analytics":
     )
 
     st.dataframe(final_df, use_container_width=True)
+
