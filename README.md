@@ -187,17 +187,17 @@ It’s not about building complex systems, it’s about solving the right proble
 ### Expense Data Entry Pipeline
 <img width="581" height="860" alt="Expense" src="https://github.com/user-attachments/assets/69243817-3eeb-4425-a645-b2000c362d33" />
 
+### Expense Analytics
+<img width="567" height="810" alt="ExpenseAnalytics" src="https://github.com/user-attachments/assets/0f87f666-e198-4ed6-8155-827aad7e92a7" />
+
 ### Sales Data Entry Pipeline
 <img width="768" height="874" alt="Sales" src="https://github.com/user-attachments/assets/ba0713dc-d5a7-4c14-87c7-3b345fd91cb8" />
 
 ### Sales Analytics 
-<img width="654" height="843" alt="SalesAnalytics" src="https://github.com/user-attachments/assets/a2af891a-8586-43de-8700-4e44b5532e88" />
+<img width="637" height="843" alt="SalesAnalytics" src="https://github.com/user-attachments/assets/e7a75984-cf4d-4c30-a857-8aa058144f66" />
 
 ### Attendance Data Entry Pipeline
 <img width="369" height="742" alt="Attendance" src="https://github.com/user-attachments/assets/f3c71df7-a1ff-4055-9cf9-cf3d74171475" />
 
 ### Attendance Analytics
-<img width="440" height="827" alt="AttendanceAnalytics" src="https://github.com/user-attachments/assets/f1f563f8-a73a-47fd-ba81-0e29c43c63c5" />
-
-
-
+<img width="668" height="796" alt="AttendanceAnalytics" src="https://github.com/user-attachments/assets/5be727df-169b-45ba-a80e-884b52122e11" />
