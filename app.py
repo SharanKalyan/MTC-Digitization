@@ -320,7 +320,7 @@ elif section == "🧑‍🍳 Attendance":
 
     EMPLOYEES = [
         "Vinoth","Ravi","Mani","Ansari","Kumar","Sakthi","Vijaya","Hari",
-        "Samuthuram","Ramesh","Punitha","Vembu","Devi",
+        "Samuthuram","Ramesh","Punitha","Vembu",
         "Babu","Latha","Indhra","Ambika","RY","YS",
         "Poosari","Balaji"
     ]
@@ -830,4 +830,5 @@ elif section == "📊 Sales Analytics":
     )
 
     st.dataframe(final_df, use_container_width=True)
+
 
