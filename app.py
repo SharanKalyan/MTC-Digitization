@@ -421,41 +421,44 @@ elif section == "📊 Expense Analytics":
     # 2️⃣ Expense Trend (TABLE)
     # =================================================
     st.subheader("📈 Expense Trend")
-
+    
     trend = st.radio(
         "Trend Type",
         ["Daily", "Weekly", "Monthly"],
         horizontal=True
     )
-
+    
     if trend == "Daily":
         trend_df = (
             df.groupby("date", as_index=False)["Expense Amount"]
             .sum()
             .rename(columns={"date": "Date"})
+            .sort_values("Date")          # ✅ sort by date
+            .reset_index(drop=True)
         )
+    
     elif trend == "Weekly":
         trend_df = (
             df.groupby("week", as_index=False)["Expense Amount"]
             .sum()
             .rename(columns={"week": "Week"})
+            .sort_values("Week")          # ✅ sort by week number
+            .reset_index(drop=True)
         )
+    
     else:
         trend_df = (
             df.groupby("month", as_index=False)["Expense Amount"]
             .sum()
             .rename(columns={"month": "Month"})
+            .sort_values("Month")         # ✅ sort by month
+            .reset_index(drop=True)
         )
-
-    trend_df = (
-        trend_df
-        .sort_index()
-        .reset_index(drop=True)
-    )
-
+    
     st.dataframe(trend_df, use_container_width=True)
-
+    
     st.markdown("---")
+
 
     # =================================================
     # 3️⃣ Payment Mode-wise Expense (TABLE)
@@ -729,6 +732,7 @@ elif section == "📊 Sales Analytics":
     )
 
     st.dataframe(final_df, use_container_width=True)
+
 
 
 
