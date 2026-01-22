@@ -619,6 +619,63 @@ elif section == "📊 Sales Analytics":
 
     st.markdown("## 📊 Sales Analytics")
 
+    # =================================================
+    # 📌 MONTHLY KPI SUMMARY
+    # =================================================
+    
+    # ---------- Monthly Sales ----------
+    monthly_sales_df = df[
+        (df["year"] == current_year) &
+        (df["month"] == current_month)
+    ]
+    
+    monthly_sales = monthly_sales_df["Cash Total"].sum()
+    
+    # ---------- Monthly Expenses ----------
+    expense_df = pd.DataFrame(expense_sheet.get_all_records())
+    
+    if not expense_df.empty:
+        expense_df["Expense Amount"] = pd.to_numeric(
+            expense_df["Expense Amount"], errors="coerce"
+        )
+        expense_df["date"] = pd.to_datetime(
+            expense_df["Date & Time"],
+            format="%d/%m/%Y %H:%M",
+            errors="coerce"
+        )
+    
+        monthly_expense = expense_df[
+            (expense_df["date"].dt.year == current_year) &
+            (expense_df["date"].dt.month == current_month)
+        ]["Expense Amount"].sum()
+    else:
+        monthly_expense = 0
+    
+    # ---------- Monthly Profit / Loss ----------
+    monthly_profit = monthly_sales - monthly_expense
+    
+    # ---------- KPI UI ----------
+    col1, col2, col3 = st.columns(3)
+    
+    col1.metric(
+        "💰 Total Sales (This Month)",
+        f"₹ {monthly_sales:,.0f}"
+    )
+    
+    col2.metric(
+        "💸 Total Expenses (This Month)",
+        f"₹ {monthly_expense:,.0f}"
+    )
+    
+    col3.metric(
+        "📈 Profit / Loss (This Month)",
+        f"₹ {monthly_profit:,.0f}",
+        delta=None
+    )
+    
+    st.markdown("---")
+
+
     records = sales_sheet.get_all_records()
     if not records:
         st.info("No sales data.")
@@ -776,6 +833,7 @@ elif section == "📊 Sales Analytics":
     )
     
     st.dataframe(final_df, use_container_width=True)
+
 
 
 
