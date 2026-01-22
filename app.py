@@ -748,7 +748,7 @@ elif section == "📊 Sales Analytics":
     final_df["Total Expense Per Date"] = final_df["Total Expense Per Date"].fillna(0)
     
     # ---------- PROFIT ----------
-    final_df["Profit / Loss""] = (
+    final_df["Profit / Loss"] = (
         final_df["Total Sales Per Date"] - final_df["Total Expense Per Date"]
     )
     
@@ -776,5 +776,6 @@ elif section == "📊 Sales Analytics":
     )
     
     st.dataframe(final_df, use_container_width=True)
+
 
 
