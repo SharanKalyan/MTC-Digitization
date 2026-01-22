@@ -753,7 +753,7 @@ elif section == "📊 Sales Analytics":
     )
     
     # ---------- Show totals only once per date ----------
-    for col in ["Total Sales Per Date", "Total Expense Per Date", "Profit / Loss""]:
+    for col in ["Total Sales Per Date", "Total Expense Per Date", "Profit / Loss"]:
         final_df[col] = (
             final_df.groupby("date")[col]
             .transform(lambda x: [""] * (len(x) - 1) + [x.iloc[0]])
@@ -776,4 +776,5 @@ elif section == "📊 Sales Analytics":
     )
     
     st.dataframe(final_df, use_container_width=True)
+
 
