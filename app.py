@@ -93,9 +93,19 @@ if section == "📊 Today's Summary":
 
     # ---------- SALES ----------
     sales_df = pd.DataFrame(sales_sheet.get_all_records())
+
     if not sales_df.empty:
         sales_df["Cash Total"] = pd.to_numeric(sales_df["Cash Total"], errors="coerce")
-        total_sales_today = sales_df[sales_df["Date"] == today_str]["Cash Total"].sum()
+    
+        sales_df["date"] = pd.to_datetime(
+            sales_df["Date"],
+            format="%d-%m-%Y",
+            errors="coerce"
+        ).dt.date
+    
+        total_sales_today = float(
+            sales_df[sales_df["date"] == today_date]["Cash Total"].sum()
+        )
     else:
         total_sales_today = 0.0
 
@@ -738,3 +748,4 @@ elif section == "📊 Sales Analytics":
     )
 
     st.dataframe(final_df, use_container_width=True)
+
