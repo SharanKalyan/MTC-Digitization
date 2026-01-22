@@ -431,25 +431,25 @@ elif section == "📊 Expense Analytics":
     if trend == "Daily":
         trend_df = (
             df.groupby("date", as_index=False)["Expense Amount"]
-            .sum().sort_index()
+            .sum()
             .rename(columns={"date": "Date"})
         )
     elif trend == "Weekly":
         trend_df = (
             df.groupby("week", as_index=False)["Expense Amount"]
-            .sum().sort_index()
+            .sum()
             .rename(columns={"week": "Week"})
         )
     else:
         trend_df = (
             df.groupby("month", as_index=False)["Expense Amount"]
-            .sum().sort_index()
+            .sum()
             .rename(columns={"month": "Month"})
         )
 
     trend_df = (
         trend_df
-        .sort_values("Expense Amount", ascending=False)
+        .sort_index()
         .reset_index(drop=True)
     )
 
@@ -729,5 +729,6 @@ elif section == "📊 Sales Analytics":
     )
 
     st.dataframe(final_df, use_container_width=True)
+
 
 
