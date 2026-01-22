@@ -4,7 +4,12 @@ import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
 import pytz
-import matplotlib.pyplot as plt
+
+# =================================================
+# GLOBAL DATE STANDARDS (🚨 DO NOT CHANGE)
+# =================================================
+DATE_FMT = "%Y-%m-%d"
+DATETIME_FMT = "%Y-%m-%d %H:%M"
 
 # -------------------------------------------------
 # Page Configuration
@@ -18,7 +23,6 @@ if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
 if not st.session_state.authenticated:
-    st.markdown("### Welcome!")
     st.markdown("### 🔒 Enter PIN to Access")
 
     with st.form("pin_form"):
@@ -60,6 +64,10 @@ balance_sheet = spreadsheet.worksheet("Daily_Balance")
 ist = pytz.timezone("Asia/Kolkata")
 now = datetime.now(ist)
 
+today_date = now.date()
+today_str = today_date.strftime(DATE_FMT)
+now_str = now.strftime(DATETIME_FMT)
+
 # -------------------------------------------------
 # Navigation
 # -------------------------------------------------
@@ -83,16 +91,11 @@ if section == "📊 Today's Summary":
 
     st.markdown("## 📊 Today's Summary")
 
-    today_sales_str = now.strftime("%d-%m-%Y")
-    today_expense_str = now.strftime("%d/%m/%Y")
-    today_date = now.date()
-
     # ---------- SALES ----------
     sales_df = pd.DataFrame(sales_sheet.get_all_records())
     if not sales_df.empty:
         sales_df["Cash Total"] = pd.to_numeric(sales_df["Cash Total"], errors="coerce")
-        today_sales = sales_df[sales_df["Date"] == today_sales_str]
-        total_sales_today = float(today_sales["Cash Total"].sum())
+        total_sales_today = sales_df[sales_df["Date"] == today_str]["Cash Total"].sum()
     else:
         total_sales_today = 0.0
 
@@ -100,182 +103,93 @@ if section == "📊 Today's Summary":
     expense_df = pd.DataFrame(expense_sheet.get_all_records())
     if not expense_df.empty:
         expense_df["Expense Amount"] = pd.to_numeric(expense_df["Expense Amount"], errors="coerce")
-        expense_df["Date"] = expense_df["Date & Time"].str.split(" ").str[0]
-        total_expense_today = float(
-            expense_df[expense_df["Date"] == today_expense_str]["Expense Amount"].sum()
-        )
+        expense_df["date"] = pd.to_datetime(
+            expense_df["Date & Time"], errors="coerce"
+        ).dt.date
+
+        total_expense_today = expense_df[
+            expense_df["date"] == today_date
+        ]["Expense Amount"].sum()
     else:
         total_expense_today = 0.0
 
-    # ---------- OPENING BALANCE (PREVIOUS DAY ONLY) ----------
+    # ---------- OPENING BALANCE ----------
     balance_df = pd.DataFrame(balance_sheet.get_all_records())
-
     if not balance_df.empty:
         balance_df["date"] = pd.to_datetime(
-            balance_df["Date"],
-            format="%d-%m-%Y",
-            errors="coerce"
+            balance_df["Date"], errors="coerce"
         ).dt.date
 
         prev_days = balance_df[balance_df["date"] < today_date]
-
-        if not prev_days.empty:
-            opening_balance = int(
-                prev_days.sort_values("date").iloc[-1]["Closing Balance"]
-            )
-        else:
-            opening_balance = 0
+        opening_balance = (
+            int(prev_days.sort_values("date").iloc[-1]["Closing Balance"])
+            if not prev_days.empty else 0
+        )
     else:
         opening_balance = 0
 
-    # ---------- CLOSING BALANCE ----------
+    # ---------- CLOSING ----------
     closing_balance = opening_balance + total_sales_today - total_expense_today
 
-    # ---------- UI ----------
     st.metric("📥 Opening Balance", f"₹ {opening_balance:,.0f}")
     st.metric("💵 Total Sales Today", f"₹ {total_sales_today:,.0f}")
     st.metric("💸 Total Expense Today", f"₹ {total_expense_today:,.0f}")
     st.metric("💰 Balance Remaining Today", f"₹ {closing_balance:,.0f}")
 
-    # ---------- SAVE CLOSING BALANCE (ONCE PER DAY) ----------
     if st.button("📌 Save Closing Balance for Today"):
-
-        if not balance_df.empty:
-            already_saved = balance_df[
-                balance_df["date"] == today_date
-            ]
-        else:
-            already_saved = pd.DataFrame()
+        already_saved = balance_df[balance_df["date"] == today_date] if not balance_df.empty else pd.DataFrame()
 
         if not already_saved.empty:
-            st.warning("Closing balance for today is already saved ❗")
+            st.warning("Closing balance already saved ❗")
         else:
             balance_sheet.append_row([
-                today_sales_str,
-                int(opening_balance),
-                float(total_sales_today),
-                float(total_expense_today),
-                float(closing_balance),
-                now.strftime("%d/%m/%Y %H:%M")
+                today_str,
+                opening_balance,
+                total_sales_today,
+                total_expense_today,
+                closing_balance,
+                now_str
             ])
             st.success("Closing balance saved successfully ✅")
 
 # =================================================
-# 🧾 EXPENSE ENTRY (BULK / GRID STYLE)
+# 🧾 EXPENSE ENTRY
 # =================================================
 elif section == "🧾 Expense Entry":
 
     st.markdown("## 🧾 Expense Entry")
 
     EXPENSE_CATEGORIES = [
-        "Groceries",
-        "Vegetables",
-        "Gas",
-        "Oil & Ghee",
-        "Non-Veg",
-        "Milk",
-        "Banana Leaf",
-        "Maintenance",
-        "Electricity",
-        "Rent",
-        "Salary and Advance",
-        "Transportation",
-        "Others"
+        "Groceries", "Vegetables", "Gas", "Oil & Ghee", "Non-Veg",
+        "Milk", "Banana Leaf", "Maintenance", "Electricity",
+        "Rent", "Salary and Advance", "Transportation", "Others"
     ]
 
-    with st.form("bulk_expense_form"):
-
-        # ---------- Date & Time ----------
-        col1, col2 = st.columns(2)
-        with col1:
-            exp_date = st.date_input("Expense Date", value=now.date())
-        with col2:
-            exp_time = st.time_input(
-                "Expense Time",
-                value=now.time().replace(second=0, microsecond=0)
-            )
-
-        exp_datetime = datetime.combine(exp_date, exp_time).strftime("%d/%m/%Y %H:%M")
-
-        st.markdown("---")
-        st.markdown("### 🧾 Enter Expenses (tick the category you want to submit)")
+    with st.form("expense_form"):
+        exp_date = st.date_input("Expense Date", value=today_date)
+        exp_time = st.time_input("Expense Time", value=now.time().replace(second=0))
+        exp_dt = datetime.combine(exp_date, exp_time).strftime(DATETIME_FMT)
 
         expense_rows = []
 
         for cat in EXPENSE_CATEGORIES:
-            c1, c2, c3, c4, c5, c6 = st.columns([0.5, 2, 2, 1.5, 1.5, 1.5])
+            sel = st.checkbox(cat, key=f"sel_{cat}")
+            sub = st.text_input("Sub-category", key=f"sub_{cat}")
+            amt = st.number_input("Amount", min_value=0.0, key=f"amt_{cat}")
+            pay = st.selectbox("Payment", ["Cash", "UPI", "Cheque"], key=f"pay_{cat}")
+            by = st.selectbox("Expense By", ["RK", "AR", "YS"], key=f"by_{cat}")
 
-            with c1:
-                selected = st.checkbox("", key=f"sel_{cat}")
+            expense_rows.append((sel, cat, sub, amt, pay, by))
 
-            with c2:
-                st.markdown(f"**{cat}**")
+        submit = st.form_submit_button("✅ Submit")
 
-            with c3:
-                sub_cat = st.text_input(
-                    "Sub-category",
-                    key=f"sub_{cat}",
-                    label_visibility="collapsed"
-                )
-
-            with c4:
-                amount = st.number_input(
-                    "Amount",
-                    min_value=0.0,
-                    step=1.0,
-                    key=f"amt_{cat}",
-                    label_visibility="collapsed"
-                )
-
-            with c5:
-                payment = st.selectbox(
-                    "Payment",
-                    ["Cash", "UPI", "Cheque"],
-                    key=f"pay_{cat}",
-                    label_visibility="collapsed"
-                )
-
-            with c6:
-                by = st.selectbox(
-                    "Expense By",
-                    ["RK", "AR", "YS"],
-                    key=f"by_{cat}",
-                    label_visibility="collapsed"
-                )
-
-            expense_rows.append({
-                "selected": selected,
-                "category": cat,
-                "sub_category": sub_cat,
-                "amount": amount,
-                "payment": payment,
-                "by": by
-            })
-
-        submit = st.form_submit_button("✅ Submit Expenses")
-
-    # ---------- SAVE ----------
     if submit:
-        rows_added = 0
-
-        for row in expense_rows:
-            if row["selected"] and row["amount"] > 0:
-                expense_sheet.append_row([
-                    exp_datetime,
-                    row["category"],
-                    row["sub_category"],
-                    float(row["amount"]),
-                    row["payment"],
-                    row["by"]
-                ])
-                rows_added += 1
-
-        if rows_added > 0:
-            st.success(f"✅ {rows_added} expense(s) recorded successfully")
-        else:
-            st.warning("⚠️ No expenses selected or amount entered")
-
-
+        count = 0
+        for sel, cat, sub, amt, pay, by in expense_rows:
+            if sel and amt > 0:
+                expense_sheet.append_row([exp_dt, cat, sub, amt, pay, by])
+                count += 1
+        st.success(f"{count} expense(s) recorded" if count else "No expenses submitted")
 
 # =================================================
 # 💰 SALES ENTRY
@@ -285,89 +199,55 @@ elif section == "💰 Sales Entry":
     st.markdown("## 💰 Sales Entry")
 
     with st.form("sales_form"):
-        sale_date = st.date_input("Sale Date", value=now.date()).strftime("%d-%m-%Y")
+        sale_date = st.date_input("Sale Date", value=today_date).strftime(DATE_FMT)
         store = st.selectbox("Store", ["Bigstreet", "Main", "Orders"])
-        time_slot = st.radio("Time Slot", ["Morning", "Night", "Full Day"], horizontal=True)
-        cash_total = st.number_input("Cash Total", min_value=0.0, step=100.0)
-        submit = st.form_submit_button("✅ Submit Sales")
+        slot = st.radio("Time Slot", ["Morning", "Night", "Full Day"], horizontal=True)
+        cash = st.number_input("Cash Total", min_value=0.0, step=100.0)
+        submit = st.form_submit_button("✅ Submit")
 
     if submit:
         rows = sales_sheet.get_all_values()
-
-        # Delete existing entry for same Date + Store + Time Slot
         for i in reversed([
             idx for idx, r in enumerate(rows[1:], start=2)
-            if r[0] == sale_date and r[1] == store and r[2] == time_slot
+            if r[0] == sale_date and r[1] == store and r[2] == slot
         ]):
             sales_sheet.delete_rows(i)
-    
-        # Insert fresh entry
-        sales_sheet.append_row([
-            sale_date,
-            store,
-            time_slot,
-            float(cash_total),
-            now.strftime("%d/%m/%Y %H:%M")
-        ])
 
+        sales_sheet.append_row([sale_date, store, slot, cash, now_str])
         st.success("Sales recorded successfully ✅")
 
-
-
 # =================================================
-# 🧑‍🍳 ATTENDANCE (2 SHIFTS: MORNING & NIGHT)
+# 🧑‍🍳 ATTENDANCE
 # =================================================
 elif section == "🧑‍🍳 Attendance":
 
-    st.markdown("## 🧑‍🍳 Employee Attendance")
+    st.markdown("## 🧑‍🍳 Attendance")
 
     EMPLOYEES = [
         "Vinoth","Ravi","Mani","Ansari","Kumar","Sakthi","Vijaya","Hari",
-        "Samuthuram","Ramesh","Punitha","Vembu",
-        "Babu","Latha","Indhra","Ambika","RY","YS",
-        "Poosari","Balaji"
+        "Samuthuram","Ramesh","Punitha","Vembu","Babu","Latha",
+        "Indhra","Ambika","RY","YS","Poosari","Balaji"
     ]
 
-    att_date = st.date_input(
-        "Attendance Date",
-        value=now.date()
-    ).strftime("%d/%m/%Y")
+    att_date = st.date_input("Attendance Date", value=today_date).strftime(DATE_FMT)
 
-    entry_time = now.strftime("%d/%m/%Y %H:%M")
-
-    st.markdown("### 🌅 Morning (Tick if Absent)")
-    morning = {
-        emp: st.checkbox(emp, key=f"m_{emp}")
-        for emp in EMPLOYEES
-    }
-
-    st.markdown("### 🌙 Night (Tick if Absent)")
-    night = {
-        emp: st.checkbox(emp, key=f"n_{emp}")
-        for emp in EMPLOYEES
-    }
+    morning = {e: st.checkbox(f"{e} (Morning)", key=f"m_{e}") for e in EMPLOYEES}
+    night = {e: st.checkbox(f"{e} (Night)", key=f"n_{e}") for e in EMPLOYEES}
 
     if st.button("✅ Submit Attendance"):
-
-        # Remove existing attendance for the same date
         rows = attendance_sheet.get_all_values()
-        for i in reversed([
-            idx for idx, r in enumerate(rows[1:], start=2)
-            if r[0] == att_date
-        ]):
+        for i in reversed([idx for idx, r in enumerate(rows[1:], start=2) if r[0] == att_date]):
             attendance_sheet.delete_rows(i)
 
-        # Insert fresh attendance
-        for emp in EMPLOYEES:
+        for e in EMPLOYEES:
             attendance_sheet.append_row([
-                att_date,
-                emp,
-                "✖" if morning[emp] else "✔",
-                "✖" if night[emp] else "✔",
-                entry_time
+                att_date, e,
+                "✖" if morning[e] else "✔",
+                "✖" if night[e] else "✔",
+                now_str
             ])
+        st.success("Attendance saved ✅")
 
-        st.success("Attendance saved successfully ✅")
 
 
 # =================================================
@@ -858,9 +738,3 @@ elif section == "📊 Sales Analytics":
     )
 
     st.dataframe(final_df, use_container_width=True)
-
-
-
-
-
-
