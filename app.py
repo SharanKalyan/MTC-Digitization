@@ -367,10 +367,8 @@ elif section == "🧑‍🍳 Attendance":
         st.success("Attendance saved successfully ✅")
 
 
-
-
 # =================================================
-# 📊 EXPENSE ANALYTICS (TABLE-ONLY)
+# 📊 EXPENSE ANALYTICS (TABLE-ONLY + KPIs)
 # =================================================
 elif section == "📊 Expense Analytics":
 
@@ -381,7 +379,9 @@ elif section == "📊 Expense Analytics":
         st.info("No expense data available yet.")
         st.stop()
 
-    # ---------- Data Cleaning ----------
+    # -------------------------------------------------
+    # Data Cleaning
+    # -------------------------------------------------
     df["Expense Amount"] = pd.to_numeric(df["Expense Amount"], errors="coerce")
     df["datetime"] = pd.to_datetime(
         df["Date & Time"],
@@ -393,11 +393,33 @@ elif section == "📊 Expense Analytics":
 
     df["date"] = df["datetime"].dt.date
     df["week"] = df["datetime"].dt.isocalendar().week
-    df["month"] = df["datetime"].dt.to_period("M")
+    df["month"] = df["datetime"].dt.month
     df["year"] = df["datetime"].dt.year
 
-    # ---------- Total Expense ----------
-    st.metric("💸 Total Expense", f"₹ {df['Expense Amount'].sum():,.0f}")
+    current_year = now.year
+    current_month = now.month
+    current_week = now.isocalendar().week
+
+    # =================================================
+    # 📌 EXPENSE KPI SUMMARY
+    # =================================================
+    overall_expense = df["Expense Amount"].sum()
+
+    monthly_expense = df[
+        (df["year"] == current_year) &
+        (df["month"] == current_month)
+    ]["Expense Amount"].sum()
+
+    weekly_expense = df[
+        (df["year"] == current_year) &
+        (df["week"] == current_week)
+    ]["Expense Amount"].sum()
+
+    col1, col2, col3 = st.columns(3)
+
+    col1.metric("💸 Overall Expenses", f"₹ {overall_expense:,.0f}")
+    col2.metric("📅 Expenses (This Month)", f"₹ {monthly_expense:,.0f}")
+    col3.metric("🗓️ Expenses (This Week)", f"₹ {weekly_expense:,.0f}")
 
     st.markdown("---")
 
@@ -421,44 +443,43 @@ elif section == "📊 Expense Analytics":
     # 2️⃣ Expense Trend (TABLE)
     # =================================================
     st.subheader("📈 Expense Trend")
-    
+
     trend = st.radio(
         "Trend Type",
         ["Daily", "Weekly", "Monthly"],
         horizontal=True
     )
-    
+
     if trend == "Daily":
         trend_df = (
             df.groupby("date", as_index=False)["Expense Amount"]
             .sum()
             .rename(columns={"date": "Date"})
-            .sort_values("Date")          # ✅ sort by date
+            .sort_values("Date")
             .reset_index(drop=True)
         )
-    
+
     elif trend == "Weekly":
         trend_df = (
             df.groupby("week", as_index=False)["Expense Amount"]
             .sum()
             .rename(columns={"week": "Week"})
-            .sort_values("Week")          # ✅ sort by week number
+            .sort_values("Week")
             .reset_index(drop=True)
         )
-    
+
     else:
         trend_df = (
-            df.groupby("month", as_index=False)["Expense Amount"]
+            df.groupby(["year", "month"], as_index=False)["Expense Amount"]
             .sum()
             .rename(columns={"month": "Month"})
-            .sort_values("Month")         # ✅ sort by month
+            .sort_values(["year", "Month"])
             .reset_index(drop=True)
         )
-    
-    st.dataframe(trend_df, use_container_width=True)
-    
-    st.markdown("---")
 
+    st.dataframe(trend_df, use_container_width=True)
+
+    st.markdown("---")
 
     # =================================================
     # 3️⃣ Payment Mode-wise Expense (TABLE)
@@ -489,6 +510,7 @@ elif section == "📊 Expense Analytics":
     )
 
     st.dataframe(by_df, use_container_width=True)
+
 
 # =================================================
 # 📈 ATTENDANCE ANALYTICS
@@ -808,3 +830,4 @@ elif section == "📊 Sales Analytics":
     )
 
     st.dataframe(final_df, use_container_width=True)
+
