@@ -170,6 +170,8 @@ elif section == "🧾 Expense Entry":
     EXPENSE_CATEGORIES = [
         "Groceries",
         "Vegetables",
+        "Gas",
+        "Oil & Ghee",
         "Non-Veg",
         "Milk",
         "Banana Leaf",
@@ -272,6 +274,7 @@ elif section == "🧾 Expense Entry":
             st.success(f"✅ {rows_added} expense(s) recorded successfully")
         else:
             st.warning("⚠️ No expenses selected or amount entered")
+
 
 
 # =================================================
@@ -830,5 +833,6 @@ elif section == "📊 Sales Analytics":
     )
 
     st.dataframe(final_df, use_container_width=True)
+
 
 
