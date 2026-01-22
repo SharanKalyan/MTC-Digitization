@@ -63,20 +63,23 @@ Allows daily recording of expenses with:
 - Amount
 - Payment mode
 - Person responsible
+- All of them can be registered in bulk so that user need not register the expenses one by one.  
 
 ### Outcome:
 - Complete visibility into where money is spent.
+- Supports Bulk data entry
 - Foundation for expense trend analytics
 
 ### 2. Sales Tracking
 
-Handles sales across multiple revenue sources:
+Handles sales across multiple revenue sources / Stores:
 - Bigstreet
 - Main Store
 - Orders
 
 ### Key features:
 - Morning / Night / Full Day slots
+- KPI's are visible at top for user 
 - Overwrites duplicate entries for accuracy
 - Cash-based entry (as per current business needs)
 
@@ -100,6 +103,7 @@ Attendance is recorded once per day with:
 
 Built-in dashboards provide insights such as:
 - Expense Analytics
+- Expense KPI's such as Overall, Monthly and Weekly Expense at top. 
 - Day-wise expense trends
 - Historical expense tracking
 - Sales Analytics
