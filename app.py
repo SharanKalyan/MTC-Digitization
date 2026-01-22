@@ -442,8 +442,6 @@ elif section == "📊 Expense Analytics":
 
     st.markdown("---")
 
-        st.markdown("---")
-
     # =================================================
     # 🧾 Other Expenses – Sub-Category Breakdown
     # =================================================
@@ -467,6 +465,8 @@ elif section == "📊 Expense Analytics":
         )
 
         st.dataframe(other_summary, use_container_width=True)
+
+    st.markdown("---")
 
     
     # =================================================
@@ -860,6 +860,7 @@ elif section == "📊 Sales Analytics":
     )
 
     st.dataframe(final_df, use_container_width=True)
+
 
 
 
