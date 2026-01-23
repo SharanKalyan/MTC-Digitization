@@ -264,21 +264,23 @@ elif section == "📊 Expense Analytics":
         st.stop()
 
     # -------------------------------------------------
-    # Data Cleaning
+    # Data Cleaning & Date Normalization
     # -------------------------------------------------
     df["Expense Amount"] = pd.to_numeric(df["Expense Amount"], errors="coerce")
+
     df["datetime"] = pd.to_datetime(
         df["Date & Time"],
-        format="%d/%m/%Y %H:%M",
+        format=DATETIME_FMT,      # DD/MM/YYYY HH:MM
         errors="coerce"
     )
 
     df = df.dropna(subset=["datetime", "Expense Amount"])
 
+    # 🔑 Normalize once — reuse everywhere
     df["date"] = df["datetime"].dt.date
-    df["week"] = df["datetime"].dt.isocalendar().week
-    df["month"] = df["datetime"].dt.month
     df["year"] = df["datetime"].dt.year
+    df["month"] = df["datetime"].dt.month
+    df["week"] = df["datetime"].dt.isocalendar().week
 
     current_year = now.year
     current_month = now.month
@@ -308,7 +310,7 @@ elif section == "📊 Expense Analytics":
     st.markdown("---")
 
     # =================================================
-    # 1️⃣ Category-wise Expense (TABLE)
+    # 1️⃣ Category-wise Expense
     # =================================================
     st.subheader("📂 Category-wise Expense")
 
@@ -347,9 +349,8 @@ elif section == "📊 Expense Analytics":
 
     st.markdown("---")
 
-    
     # =================================================
-    # 2️⃣ Expense Trend (TABLE)
+    # 2️⃣ Expense Trend
     # =================================================
     st.subheader("📈 Expense Trend")
 
@@ -368,6 +369,10 @@ elif section == "📊 Expense Analytics":
             .reset_index(drop=True)
         )
 
+        trend_df["Date"] = trend_df["Date"].apply(
+            lambda x: x.strftime(DATE_FMT)
+        )
+
     elif trend == "Weekly":
         trend_df = (
             df.groupby("week", as_index=False)["Expense Amount"]
@@ -377,7 +382,7 @@ elif section == "📊 Expense Analytics":
             .reset_index(drop=True)
         )
 
-    else:
+    else:  # Monthly
         trend_df = (
             df.groupby(["year", "month"], as_index=False)["Expense Amount"]
             .sum()
@@ -391,7 +396,7 @@ elif section == "📊 Expense Analytics":
     st.markdown("---")
 
     # =================================================
-    # 3️⃣ Payment Mode-wise Expense (TABLE)
+    # 3️⃣ Payment Mode-wise Expense
     # =================================================
     st.subheader("💳 Payment Mode")
 
@@ -407,7 +412,7 @@ elif section == "📊 Expense Analytics":
     st.markdown("---")
 
     # =================================================
-    # 4️⃣ Expense By (TABLE)
+    # 4️⃣ Expense By
     # =================================================
     st.subheader("👤 Expense By")
 
@@ -419,6 +424,7 @@ elif section == "📊 Expense Analytics":
     )
 
     st.dataframe(by_df, use_container_width=True)
+
 
 
 # =================================================
@@ -739,6 +745,7 @@ elif section == "📊 Sales Analytics":
     )
 
     st.dataframe(final_df, use_container_width=True)
+
 
 
 
