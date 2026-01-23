@@ -6,11 +6,10 @@ from datetime import datetime
 import pytz
 
 # =================================================
-# DATE FORMAT CONSTANTS (🚨 DO NOT CHANGE)
+# GLOBAL DATE STANDARDS (DO NOT CHANGE)
 # =================================================
-EXPENSE_DATETIME_FMT = "%d/%m/%Y %H:%M"   # 23/01/2026 08:34
-SALES_DATE_FMT = "%d-%m-%Y"               # 23-01-2026
-ATTENDANCE_DATE_FMT = "%d/%m/%Y"          # 23/01/2026
+DATE_FMT = "%d/%m/%Y"
+DATETIME_FMT = "%d/%m/%Y %H:%M"
 
 # -------------------------------------------------
 # Page Configuration
@@ -66,6 +65,8 @@ ist = pytz.timezone("Asia/Kolkata")
 now = datetime.now(ist)
 
 today_date = now.date()
+today_str = today_date.strftime(DATE_FMT)
+now_str = now.strftime(DATETIME_FMT)
 
 # -------------------------------------------------
 # Navigation
@@ -95,9 +96,8 @@ if section == "📊 Today's Summary":
     if not sales_df.empty:
         sales_df["Cash Total"] = pd.to_numeric(sales_df["Cash Total"], errors="coerce")
         sales_df["date"] = pd.to_datetime(
-            sales_df["Date"], format=SALES_DATE_FMT, errors="coerce"
+            sales_df["Date"], format=DATE_FMT, errors="coerce"
         ).dt.date
-
         total_sales_today = sales_df[sales_df["date"] == today_date]["Cash Total"].sum()
     else:
         total_sales_today = 0.0
@@ -109,11 +109,8 @@ if section == "📊 Today's Summary":
             expense_df["Expense Amount"], errors="coerce"
         )
         expense_df["date"] = pd.to_datetime(
-            expense_df["Date & Time"],
-            format=EXPENSE_DATETIME_FMT,
-            errors="coerce"
+            expense_df["Date & Time"], format=DATETIME_FMT, errors="coerce"
         ).dt.date
-
         total_expense_today = expense_df[
             expense_df["date"] == today_date
         ]["Expense Amount"].sum()
@@ -124,9 +121,8 @@ if section == "📊 Today's Summary":
     balance_df = pd.DataFrame(balance_sheet.get_all_records())
     if not balance_df.empty:
         balance_df["date"] = pd.to_datetime(
-            balance_df["Date"], format=SALES_DATE_FMT, errors="coerce"
+            balance_df["Date"], format=DATE_FMT, errors="coerce"
         ).dt.date
-
         prev_days = balance_df[balance_df["date"] < today_date]
         opening_balance = (
             int(prev_days.sort_values("date").iloc[-1]["Closing Balance"])
@@ -135,7 +131,6 @@ if section == "📊 Today's Summary":
     else:
         opening_balance = 0
 
-    # ---------- CLOSING ----------
     closing_balance = opening_balance + total_sales_today - total_expense_today
 
     st.metric("📥 Opening Balance", f"₹ {opening_balance:,.0f}")
@@ -144,55 +139,53 @@ if section == "📊 Today's Summary":
     st.metric("💰 Balance Remaining Today", f"₹ {closing_balance:,.0f}")
 
     if st.button("📌 Save Closing Balance for Today"):
-        already_saved = balance_df[
-            balance_df["date"] == today_date
-        ] if not balance_df.empty else pd.DataFrame()
-
+        already_saved = balance_df[balance_df["date"] == today_date] if not balance_df.empty else pd.DataFrame()
         if not already_saved.empty:
             st.warning("Closing balance already saved ❗")
         else:
             balance_sheet.append_row([
-                today_date.strftime(SALES_DATE_FMT),
+                today_str,
                 opening_balance,
                 total_sales_today,
                 total_expense_today,
                 closing_balance,
-                now.strftime(EXPENSE_DATETIME_FMT)
+                now_str
             ])
             st.success("Closing balance saved successfully ✅")
 
 # =================================================
-# 🧾 EXPENSE ENTRY
+# 🧾 EXPENSE ENTRY (BULK)
 # =================================================
 elif section == "🧾 Expense Entry":
 
     st.markdown("## 🧾 Expense Entry")
 
     EXPENSE_CATEGORIES = [
-        "Groceries", "Vegetables", "Gas", "Oil & Ghee", "Non-Veg",
-        "Milk", "Banana Leaf", "Maintenance", "Electricity",
-        "Rent", "Salary and Advance", "Transportation", "Others"
+        "Groceries","Vegetables","Gas","Oil & Ghee","Non-Veg",
+        "Milk","Banana Leaf","Maintenance","Electricity",
+        "Rent","Salary and Advance","Transportation","Others"
     ]
 
     with st.form("expense_form"):
         exp_date = st.date_input("Expense Date", value=today_date)
         exp_time = st.time_input("Expense Time", value=now.time().replace(second=0))
-        exp_dt = datetime.combine(exp_date, exp_time).strftime(EXPENSE_DATETIME_FMT)
+        exp_dt = datetime.combine(exp_date, exp_time).strftime(DATETIME_FMT)
 
-        rows = []
+        expense_rows = []
+
         for cat in EXPENSE_CATEGORIES:
             sel = st.checkbox(cat, key=f"sel_{cat}")
             sub = st.text_input("Sub-category", key=f"sub_{cat}")
             amt = st.number_input("Amount", min_value=0.0, key=f"amt_{cat}")
-            pay = st.selectbox("Payment", ["Cash", "UPI", "Cheque"], key=f"pay_{cat}")
-            by = st.selectbox("Expense By", ["RK", "AR", "YS"], key=f"by_{cat}")
-            rows.append((sel, cat, sub, amt, pay, by))
+            pay = st.selectbox("Payment", ["Cash","UPI","Cheque"], key=f"pay_{cat}")
+            by = st.selectbox("Expense By", ["RK","AR","YS"], key=f"by_{cat}")
+            expense_rows.append((sel, cat, sub, amt, pay, by))
 
         submit = st.form_submit_button("✅ Submit")
 
     if submit:
         count = 0
-        for sel, cat, sub, amt, pay, by in rows:
+        for sel, cat, sub, amt, pay, by in expense_rows:
             if sel and amt > 0:
                 expense_sheet.append_row([exp_dt, cat, sub, amt, pay, by])
                 count += 1
@@ -206,9 +199,9 @@ elif section == "💰 Sales Entry":
     st.markdown("## 💰 Sales Entry")
 
     with st.form("sales_form"):
-        sale_date = st.date_input("Sale Date", value=today_date).strftime(SALES_DATE_FMT)
-        store = st.selectbox("Store", ["Bigstreet", "Main", "Orders"])
-        slot = st.radio("Time Slot", ["Morning", "Night", "Full Day"], horizontal=True)
+        sale_date = st.date_input("Sale Date", value=today_date).strftime(DATE_FMT)
+        store = st.selectbox("Store", ["Bigstreet","Main","Orders"])
+        slot = st.radio("Time Slot", ["Morning","Night","Full Day"], horizontal=True)
         cash = st.number_input("Cash Total", min_value=0.0, step=100.0)
         submit = st.form_submit_button("✅ Submit")
 
@@ -220,9 +213,7 @@ elif section == "💰 Sales Entry":
         ]):
             sales_sheet.delete_rows(i)
 
-        sales_sheet.append_row([
-            sale_date, store, slot, cash, now.strftime(EXPENSE_DATETIME_FMT)
-        ])
+        sales_sheet.append_row([sale_date, store, slot, cash, now_str])
         st.success("Sales recorded successfully ✅")
 
 # =================================================
@@ -238,9 +229,7 @@ elif section == "🧑‍🍳 Attendance":
         "Indhra","Ambika","RY","YS","Poosari","Balaji"
     ]
 
-    att_date = st.date_input(
-        "Attendance Date", value=today_date
-    ).strftime(ATTENDANCE_DATE_FMT)
+    att_date = st.date_input("Attendance Date", value=today_date).strftime(DATE_FMT)
 
     morning = {e: st.checkbox(f"{e} (Morning)", key=f"m_{e}") for e in EMPLOYEES}
     night = {e: st.checkbox(f"{e} (Night)", key=f"n_{e}") for e in EMPLOYEES}
@@ -257,9 +246,10 @@ elif section == "🧑‍🍳 Attendance":
                 att_date, e,
                 "✖" if morning[e] else "✔",
                 "✖" if night[e] else "✔",
-                now.strftime(EXPENSE_DATETIME_FMT)
+                now_str
             ])
         st.success("Attendance saved ✅")
+
 
 # =================================================
 # 📊 EXPENSE ANALYTICS (TABLE-ONLY + KPIs)
@@ -749,5 +739,6 @@ elif section == "📊 Sales Analytics":
     )
 
     st.dataframe(final_df, use_container_width=True)
+
 
 
