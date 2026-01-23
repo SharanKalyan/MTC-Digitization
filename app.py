@@ -117,19 +117,27 @@ if section == "📊 Today's Summary":
     else:
         total_expense_today = 0.0
 
-    # ---------- OPENING BALANCE ----------
+   # ---------- OPENING BALANCE ----------
     balance_df = pd.DataFrame(balance_sheet.get_all_records())
+    
     if not balance_df.empty:
         balance_df["date"] = pd.to_datetime(
-            balance_df["Date"], format=DATE_FMT, errors="coerce"
-        ).dt.date
-        prev_days = balance_df[balance_df["date"] < today_date]
+            balance_df["Date"],
+            format=DATE_FMT,
+            errors="coerce"
+        )
+    
+        today_dt = pd.to_datetime(today_date)
+    
+        prev_days = balance_df[balance_df["date"] < today_dt]
+    
         opening_balance = (
             int(prev_days.sort_values("date").iloc[-1]["Closing Balance"])
             if not prev_days.empty else 0
         )
     else:
         opening_balance = 0
+
 
     closing_balance = opening_balance + total_sales_today - total_expense_today
 
@@ -760,6 +768,7 @@ elif section == "📊 Sales Analytics":
     ]].sort_values(["Date", "Store"]).reset_index(drop=True)
 
     st.dataframe(final_df, use_container_width=True)
+
 
 
 
