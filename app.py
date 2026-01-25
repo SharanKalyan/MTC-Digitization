@@ -248,19 +248,19 @@ if section == "📊 Today's Summary":
             saved_closing = float(today_row.iloc[0]["Closing Balance"])
             saved_ts = today_row.iloc[0]["Entry Timestamp"]
     
-    # ---------- KPI DISPLAY ----------
+    # ---------- UI ----------
     if saved_closing is not None:
         st.metric(
             "📦 Closing Balance (Saved)",
-            f"₹ {saved_closing:,.0f}",
-            help=f"Last updated at {saved_ts}"
+            f"₹ {saved_closing:,.0f}"
         )
+        st.caption(f"Last updated: {saved_ts}")
     else:
         st.metric(
             "📦 Closing Balance (Saved)",
-            "Not saved yet",
-            help="No closing balance recorded for today"
+            "Not saved yet"
         )
+        st.caption("No closing balance recorded for today")
 
 
 # =================================================
@@ -893,6 +893,7 @@ elif section == "📊 Sales Analytics":
     ]].sort_values(["Date", "Store"]).reset_index(drop=True)
 
     st.dataframe(final_df, use_container_width=True)
+
 
 
 
