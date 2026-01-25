@@ -68,6 +68,95 @@ today_date = now.date()
 today_str = today_date.strftime(DATE_FMT)
 now_str = now.strftime(DATETIME_FMT)
 
+
+# =================================================
+# 🔁 DAILY BALANCE UPSERT HELPER
+# =================================================
+def upsert_daily_balance(
+    balance_sheet,
+    target_date,          # datetime.date
+    delta_sales=0.0,
+    delta_expense=0.0,
+    now_str=""
+):
+    """
+    Auto-upsert logic for Daily_Balance sheet.
+    """
+
+    records = balance_sheet.get_all_records()
+    df = pd.DataFrame(records)
+
+    date_str = target_date.strftime(DATE_FMT)
+
+    # -------------------------------
+    # CASE 1: Sheet is empty
+    # -------------------------------
+    if df.empty:
+        opening_balance = 0.0
+        total_sales = float(delta_sales)
+        total_expense = float(delta_expense)
+        closing_balance = opening_balance + total_sales - total_expense
+
+        balance_sheet.append_row([
+            date_str,
+            opening_balance,
+            total_sales,
+            total_expense,
+            closing_balance,
+            now_str
+        ])
+        return
+
+    # Normalize date column
+    df["date"] = pd.to_datetime(
+        df["Date"],
+        format=DATE_FMT,
+        errors="coerce"
+    ).dt.date
+
+    # -------------------------------
+    # CASE 2: Row for today exists
+    # -------------------------------
+    if target_date in df["date"].values:
+        row_idx = df[df["date"] == target_date].index[0] + 2  # +2 for header + 1-index
+
+        opening_balance = float(df.loc[df.index[row_idx - 2], "Opening Balance"])
+        total_sales = float(df.loc[df.index[row_idx - 2], "Total Sales"]) + float(delta_sales)
+        total_expense = float(df.loc[df.index[row_idx - 2], "Total Expense"]) + float(delta_expense)
+        closing_balance = opening_balance + total_sales - total_expense
+
+        balance_sheet.update(f"C{row_idx}", total_sales)      # Total Sales
+        balance_sheet.update(f"D{row_idx}", total_expense)    # Total Expense
+        balance_sheet.update(f"E{row_idx}", closing_balance)  # Closing Balance
+        balance_sheet.update(f"F{row_idx}", now_str)          # Timestamp
+
+        return
+
+    # -------------------------------
+    # CASE 3: First entry for today
+    # -------------------------------
+    prev_days = df[df["date"] < target_date]
+
+    if not prev_days.empty:
+        opening_balance = float(
+            prev_days.sort_values("date").iloc[-1]["Closing Balance"]
+        )
+    else:
+        opening_balance = 0.0
+
+    total_sales = float(delta_sales)
+    total_expense = float(delta_expense)
+    closing_balance = opening_balance + total_sales - total_expense
+
+    balance_sheet.append_row([
+        date_str,
+        opening_balance,
+        total_sales,
+        total_expense,
+        closing_balance,
+        now_str
+    ])
+
 # -------------------------------------------------
 # Navigation
 # -------------------------------------------------
@@ -146,21 +235,6 @@ if section == "📊 Today's Summary":
     st.metric("💸 Total Expense Today", f"₹ {total_expense_today:,.0f}")
     st.metric("💰 Balance Remaining Today", f"₹ {closing_balance:,.0f}")
 
-    if st.button("📌 Save Closing Balance for Today"):
-        already_saved = balance_df[balance_df["date"] == today_date] if not balance_df.empty else pd.DataFrame()
-        if not already_saved.empty:
-            st.warning("Closing balance already saved ❗")
-        else:
-            balance_sheet.append_row([
-                today_str,
-                opening_balance,
-                total_sales_today,
-                total_expense_today,
-                closing_balance,
-                now_str
-            ])
-            st.success("Closing balance saved successfully ✅")
-
 # =================================================
 # 🧾 EXPENSE ENTRY (BULK)
 # =================================================
@@ -193,11 +267,26 @@ elif section == "🧾 Expense Entry":
 
     if submit:
         count = 0
+        total_expense_added = 0.0
+
         for sel, cat, sub, amt, pay, by in expense_rows:
             if sel and amt > 0:
-                expense_sheet.append_row([exp_dt, cat, sub, amt, pay, by])
+                expense_sheet.append_row([
+                    exp_dt, cat, sub, amt, pay, by
+                ])
+                total_expense_added += float(amt)
                 count += 1
+    
+        if total_expense_added > 0:
+            upsert_daily_balance(
+                balance_sheet=balance_sheet,
+                target_date=exp_date,
+                delta_expense=total_expense_added,
+                now_str=now_str
+            )
+    
         st.success(f"{count} expense(s) recorded" if count else "No expenses submitted")
+
 
 # =================================================
 # 💰 SALES ENTRY
@@ -222,6 +311,14 @@ elif section == "💰 Sales Entry":
             sales_sheet.delete_rows(i)
 
         sales_sheet.append_row([sale_date, store, slot, cash, now_str])
+        upsert_daily_balance(
+        balance_sheet=balance_sheet,
+        target_date=today_date,
+        delta_sales=float(cash),
+        now_str=now_str
+        )
+
+        
         st.success("Sales recorded successfully ✅")
 
 # =================================================
@@ -768,6 +865,7 @@ elif section == "📊 Sales Analytics":
     ]].sort_values(["Date", "Store"]).reset_index(drop=True)
 
     st.dataframe(final_df, use_container_width=True)
+
 
 
 
