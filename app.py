@@ -235,6 +235,34 @@ if section == "📊 Today's Summary":
     st.metric("💸 Total Expense Today", f"₹ {total_expense_today:,.0f}")
     st.metric("💰 Balance Remaining Today", f"₹ {closing_balance:,.0f}")
 
+    # ---------- SAVED CLOSING BALANCE (FROM DAILY_BALANCE) ----------
+    saved_closing = None
+    saved_ts = None
+    
+    if not balance_df.empty:
+        today_row = balance_df[
+            balance_df["date"] == today_dt
+        ]
+    
+        if not today_row.empty:
+            saved_closing = float(today_row.iloc[0]["Closing Balance"])
+            saved_ts = today_row.iloc[0]["Entry Timestamp"]
+    
+    # ---------- KPI DISPLAY ----------
+    if saved_closing is not None:
+        st.metric(
+            "📦 Closing Balance (Saved)",
+            f"₹ {saved_closing:,.0f}",
+            help=f"Last updated at {saved_ts}"
+        )
+    else:
+        st.metric(
+            "📦 Closing Balance (Saved)",
+            "Not saved yet",
+            help="No closing balance recorded for today"
+        )
+
+
 # =================================================
 # 🧾 EXPENSE ENTRY (BULK)
 # =================================================
@@ -865,6 +893,7 @@ elif section == "📊 Sales Analytics":
     ]].sort_values(["Date", "Store"]).reset_index(drop=True)
 
     st.dataframe(final_df, use_container_width=True)
+
 
 
 
