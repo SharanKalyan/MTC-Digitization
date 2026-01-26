@@ -317,37 +317,90 @@ elif section == "🧾 Expense Entry":
 
 
 # =================================================
-# 💰 SALES ENTRY
+# 💰 SALES ENTRY (BULK STYLE)
 # =================================================
 elif section == "💰 Sales Entry":
 
     st.markdown("## 💰 Sales Entry")
 
-    with st.form("sales_form"):
-        sale_date = st.date_input("Sale Date", value=today_date).strftime(DATE_FMT)
-        store = st.selectbox("Store", ["Bigstreet","Main","Orders"])
-        slot = st.radio("Time Slot", ["Morning","Night","Full Day"], horizontal=True)
-        cash = st.number_input("Cash Total", min_value=0.0, step=100.0)
-        submit = st.form_submit_button("✅ Submit")
+    STORES = ["Bigstreet", "Main", "Orders"]
+    SLOTS = ["Morning", "Night", "Full Day"]
 
+    with st.form("bulk_sales_form"):
+
+        # ---------- Sale Date ----------
+        sale_date = st.date_input("Sale Date", value=today_date)
+        sale_date_str = sale_date.strftime(DATE_FMT)
+
+        st.markdown("---")
+        st.markdown("### 🧾 Enter Sales (fill amount if applicable)")
+
+        sales_rows = []
+
+        for store in STORES:
+            for slot in SLOTS:
+                col1, col2, col3 = st.columns([2, 2, 2])
+
+                with col1:
+                    st.markdown(f"**{store}**")
+
+                with col2:
+                    st.markdown(slot)
+
+                with col3:
+                    cash = st.number_input(
+                        "Cash Total",
+                        min_value=0.0,
+                        step=100.0,
+                        key=f"{store}_{slot}"
+                    )
+
+                sales_rows.append((store, slot, cash))
+
+        submit = st.form_submit_button("✅ Submit Sales")
+
+    # ---------- SAVE ----------
     if submit:
-        rows = sales_sheet.get_all_values()
-        for i in reversed([
-            idx for idx, r in enumerate(rows[1:], start=2)
-            if r[0] == sale_date and r[1] == store and r[2] == slot
-        ]):
-            sales_sheet.delete_rows(i)
+        rows_added = 0
+        total_sales_added = 0.0
 
-        sales_sheet.append_row([sale_date, store, slot, cash, now_str])
-        upsert_daily_balance(
-        balance_sheet=balance_sheet,
-        target_date=today_date,
-        delta_sales=float(cash),
-        now_str=now_str
-        )
+        existing_rows = sales_sheet.get_all_values()
 
-        
-        st.success("Sales recorded successfully ✅")
+        for store, slot, cash in sales_rows:
+            if cash > 0:
+                # 🔁 Remove existing entry for same date + store + slot
+                for i in reversed([
+                    idx for idx, r in enumerate(existing_rows[1:], start=2)
+                    if r[0] == sale_date_str and r[1] == store and r[2] == slot
+                ]):
+                    sales_sheet.delete_rows(i)
+
+                # ➕ Insert new row
+                sales_sheet.append_row([
+                    sale_date_str,
+                    store,
+                    slot,
+                    float(cash),
+                    now_str
+                ])
+
+                total_sales_added += float(cash)
+                rows_added += 1
+
+        # 🔄 Update Daily Balance once
+        if total_sales_added > 0:
+            upsert_daily_balance(
+                balance_sheet=balance_sheet,
+                target_date=sale_date,
+                delta_sales=total_sales_added,
+                now_str=now_str
+            )
+
+        if rows_added > 0:
+            st.success(f"✅ {rows_added} sale entry(s) recorded successfully")
+        else:
+            st.warning("⚠️ No sales entered")
+
 
 # =================================================
 # 🧑‍🍳 ATTENDANCE
@@ -898,6 +951,7 @@ elif section == "📊 Sales Analytics":
     ]].sort_values(["Date", "Store"]).reset_index(drop=True)
 
     st.dataframe(final_df, use_container_width=True)
+
 
 
 
