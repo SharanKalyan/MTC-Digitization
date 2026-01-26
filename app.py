@@ -428,8 +428,6 @@ elif section == "💰 Sales Entry":
         st.success(f"✅ {rows_written} sales entries recorded successfully")
 
 
-
-
 # =================================================
 # 🧑‍🍳 ATTENDANCE
 # =================================================
@@ -443,25 +441,58 @@ elif section == "🧑‍🍳 Attendance":
         "Indhra","Ambika","RY","YS","Poosari","Balaji"
     ]
 
-    att_date = st.date_input("Attendance Date", value=today_date).strftime(DATE_FMT)
+    att_date = st.date_input(
+        "Attendance Date",
+        value=today_date
+    ).strftime(DATE_FMT)
 
-    morning = {e: st.checkbox(f"{e} (Morning)", key=f"m_{e}") for e in EMPLOYEES}
-    night = {e: st.checkbox(f"{e} (Night)", key=f"n_{e}") for e in EMPLOYEES}
+    st.markdown("---")
 
+    # =================================================
+    # 🌅 MORNING SHIFT
+    # =================================================
+    st.subheader("🌅 Morning")
+
+    morning = {}
+    for e in EMPLOYEES:
+        morning[e] = st.checkbox(e, key=f"m_{e}")
+
+    st.markdown("---")
+
+    # =================================================
+    # 🌙 NIGHT SHIFT
+    # =================================================
+    st.subheader("🌙 Night")
+
+    night = {}
+    for e in EMPLOYEES:
+        night[e] = st.checkbox(e, key=f"n_{e}")
+
+    st.markdown("---")
+
+    # =================================================
+    # ✅ SUBMIT
+    # =================================================
     if st.button("✅ Submit Attendance"):
+
+        # Remove existing entries for this date
         rows = attendance_sheet.get_all_values()
         for i in reversed([
-            idx for idx, r in enumerate(rows[1:], start=2) if r[0] == att_date
+            idx for idx, r in enumerate(rows[1:], start=2)
+            if r[0] == att_date
         ]):
             attendance_sheet.delete_rows(i)
 
+        # Insert fresh records
         for e in EMPLOYEES:
             attendance_sheet.append_row([
-                att_date, e,
+                att_date,
+                e,
                 "✖" if morning[e] else "✔",
                 "✖" if night[e] else "✔",
                 now_str
             ])
+
         st.success("Attendance saved ✅")
 
 
@@ -979,6 +1010,7 @@ elif section == "📊 Sales Analytics":
     ]].sort_values(["Date", "Store"]).reset_index(drop=True)
 
     st.dataframe(final_df, use_container_width=True)
+
 
 
 
