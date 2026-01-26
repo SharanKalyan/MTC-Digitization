@@ -317,7 +317,7 @@ elif section == "🧾 Expense Entry":
 
 
 # =================================================
-# 💰 SALES ENTRY (FIXED ROWS – NO DROPDOWNS)
+# 💰 SALES ENTRY (BULK – FIXED STRUCTURE)
 # =================================================
 elif section == "💰 Sales Entry":
 
@@ -325,72 +325,97 @@ elif section == "💰 Sales Entry":
 
     with st.form("sales_form"):
 
-        sale_date = st.date_input("Sale Date", value=today_date)
+        sale_date = st.date_input(
+            "Sale Date",
+            value=today_date
+        )
+
         sale_date_str = sale_date.strftime(DATE_FMT)
 
-        st.markdown("### 🧾 Enter Sales")
+        st.markdown("### 🏪 Store-wise Sales Entry")
 
-        sales_inputs = [
-            ("Bigstreet", "Morning"),
-            ("Bigstreet", "Night"),
-            ("Main", "Full Day"),
-            ("Orders", "Full Day"),
+        # ---------- Bigstreet ----------
+        st.markdown("**Bigstreet**")
+        col1, col2 = st.columns(2)
+        big_morning = col1.number_input(
+            "Morning Sales",
+            min_value=0.0,
+            step=100.0,
+            key="big_morning"
+        )
+        big_night = col2.number_input(
+            "Night Sales",
+            min_value=0.0,
+            step=100.0,
+            key="big_night"
+        )
+
+        st.markdown("---")
+
+        # ---------- Main ----------
+        st.markdown("**Main Store (Full Day)**")
+        main_full = st.number_input(
+            "Main Store Sales",
+            min_value=0.0,
+            step=100.0,
+            key="main_full"
+        )
+
+        st.markdown("---")
+
+        # ---------- Orders ----------
+        st.markdown("**Orders (Full Day)**")
+        orders_full = st.number_input(
+            "Orders Sales",
+            min_value=0.0,
+            step=100.0,
+            key="orders_full"
+        )
+
+        submit = st.form_submit_button("✅ Submit Sales")
+
+    # =================================================
+    # SAVE LOGIC
+    # =================================================
+    if submit:
+
+        sales_rows = [
+            ("Bigstreet", "Morning", big_morning),
+            ("Bigstreet", "Night", big_night),
+            ("Main", "Full Day", main_full),
+            ("Orders", "Full Day", orders_full),
         ]
 
-        sales_data = []
-
-        for store, slot in sales_inputs:
-            col1, col2, col3 = st.columns([2, 2, 3])
-
-            with col1:
-                st.markdown(f"**{store}**")
-
-            with col2:
-                st.markdown(slot)
-
-            with col3:
-                amount = st.number_input(
-                    "Cash Total",
-                    min_value=0.0,
-                    step=100.0,
-                    key=f"{store}_{slot}"
-                )
-
-            sales_data.append((store, slot, amount))
-
-        submit = st.form_submit_button("✅ Submit")
-
-    # -------------------------------------------------
-    # Save Sales + Update Daily Balance
-    # -------------------------------------------------
-    if submit:
-        rows_added = 0
         total_sales_added = 0.0
+        rows_written = 0
 
-        existing_rows = sales_sheet.get_all_values()
+        existing_rows = sales_sheet.get_all_values() or []
 
-        for store, slot, amount in sales_data:
-            if amount > 0:
-                # Remove existing entry for same date + store + slot
+        for store, slot, amount in sales_rows:
+
+            if amount and amount > 0:
+                safe_amount = round(float(amount), 2)
+
+                # ---------- Remove existing entry for same date/store/slot ----------
                 for i in reversed([
                     idx for idx, r in enumerate(existing_rows[1:], start=2)
                     if r[0] == sale_date_str and r[1] == store and r[2] == slot
                 ]):
                     sales_sheet.delete_rows(i)
 
-                # Insert new row
+                # ---------- Append new row ----------
                 sales_sheet.append_row([
-                    sale_date_str,
-                    store,
-                    slot,
-                    float(amount),
-                    now_str
+                    str(sale_date_str),
+                    str(store),
+                    str(slot),
+                    safe_amount,
+                    str(now_str)
                 ])
 
-                total_sales_added += float(amount)
-                rows_added += 1
+                total_sales_added += safe_amount
+                rows_written += 1
 
-        # 🔁 Auto-update Daily Balance
+        # ---------- Update Daily Balance ----------
         if total_sales_added > 0:
             upsert_daily_balance(
                 balance_sheet=balance_sheet,
@@ -399,10 +424,8 @@ elif section == "💰 Sales Entry":
                 now_str=now_str
             )
 
-        if rows_added > 0:
-            st.success(f"✅ {rows_added} sale entry(s) recorded successfully")
-        else:
-            st.warning("⚠️ No sales amounts entered")
+        st.success(f"✅ {rows_written} sales entries recorded successfully")
+
 
 
 
@@ -955,6 +978,7 @@ elif section == "📊 Sales Analytics":
     ]].sort_values(["Date", "Store"]).reset_index(drop=True)
 
     st.dataframe(final_df, use_container_width=True)
+
 
 
 
