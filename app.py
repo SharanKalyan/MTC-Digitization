@@ -74,23 +74,21 @@ now_str = now.strftime(DATETIME_FMT)
 # =================================================
 def upsert_daily_balance(
     balance_sheet,
-    target_date,          # datetime.date
+    target_date,
     delta_sales=0.0,
     delta_expense=0.0,
     now_str=""
 ):
-    """
-    Auto-upsert logic for Daily_Balance sheet.
-    """
+    import pandas as pd
+
+    date_str = target_date.strftime(DATE_FMT)
 
     records = balance_sheet.get_all_records()
     df = pd.DataFrame(records)
 
-    date_str = target_date.strftime(DATE_FMT)
-
-    # -------------------------------
-    # CASE 1: Sheet is empty
-    # -------------------------------
+    # -------------------------------------------------
+    # If sheet is empty → first ever entry
+    # -------------------------------------------------
     if df.empty:
         opening_balance = 0.0
         total_sales = float(delta_sales)
@@ -107,55 +105,46 @@ def upsert_daily_balance(
         ])
         return
 
+    # -------------------------------------------------
     # Normalize date column
-    df["date"] = pd.to_datetime(
-        df["Date"],
-        format=DATE_FMT,
-        errors="coerce"
-    ).dt.date
+    # -------------------------------------------------
+    df["Date"] = pd.to_datetime(df["Date"], format=DATE_FMT, errors="coerce")
+    target_dt = pd.to_datetime(target_date)
 
-    # -------------------------------
-    # CASE 2: Row for today exists
-    # -------------------------------
-    if target_date in df["date"].values:
-        row_idx = df[df["date"] == target_date].index[0] + 2  # +2 for header + 1-index
+    # -------------------------------------------------
+    # CASE 1: DATE EXISTS → UPDATE
+    # -------------------------------------------------
+    if target_dt in df["Date"].values:
 
-        opening_balance = float(df.loc[df.index[row_idx - 2], "Opening Balance"])
-        total_sales = float(df.loc[df.index[row_idx - 2], "Total Sales"]) + float(delta_sales)
-        total_expense = float(df.loc[df.index[row_idx - 2], "Total Expense"]) + float(delta_expense)
+        row_idx = df.index[df["Date"] == target_dt][0] + 2
+
+        opening_balance = float(df.loc[row_idx - 2, "Opening Balance"])
+        total_sales = float(df.loc[row_idx - 2, "Total Sales"]) + float(delta_sales)
+        total_expense = float(df.loc[row_idx - 2, "Total Expense"]) + float(delta_expense)
+
         closing_balance = opening_balance + total_sales - total_expense
 
-        balance_sheet.update(f"C{row_idx}", total_sales)      # Total Sales
-        balance_sheet.update(f"D{row_idx}", total_expense)    # Total Expense
-        balance_sheet.update(f"E{row_idx}", closing_balance)  # Closing Balance
-        balance_sheet.update(f"F{row_idx}", now_str)          # Timestamp
+        balance_sheet.update(f"C{row_idx}", [[total_sales]])
+        balance_sheet.update(f"D{row_idx}", [[total_expense]])
+        balance_sheet.update(f"E{row_idx}", [[closing_balance]])
+        balance_sheet.update(f"F{row_idx}", [[now_str]])
 
         return
 
-    # -------------------------------
-    # CASE 3: First entry for today
-    # -------------------------------
-    prev_days = df[df["date"] < target_date]
+    # -------------------------------------------------
+    # CASE 2: DATE DOES NOT EXIST → INSERT
+    # -------------------------------------------------
+    prev_days = df[df["Date"] < target_dt]
 
     if not prev_days.empty:
         opening_balance = float(
-            prev_days.sort_values("date").iloc[-1]["Closing Balance"]
+            prev_days.sort_values("Date").iloc[-1]["Closing Balance"]
         )
     else:
         opening_balance = 0.0
 
-    total_sales = float(delta_sales)
-    total_expense = float(delta_expense)
-    closing_balance = opening_balance + total_sales - total_expense
+    total_sales = float(de_
 
-    balance_sheet.append_row([
-        date_str,
-        opening_balance,
-        total_sales,
-        total_expense,
-        closing_balance,
-        now_str
-    ])
 
 # -------------------------------------------------
 # Navigation
@@ -978,6 +967,7 @@ elif section == "📊 Sales Analytics":
     ]].sort_values(["Date", "Store"]).reset_index(drop=True)
 
     st.dataframe(final_df, use_container_width=True)
+
 
 
 
