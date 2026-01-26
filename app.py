@@ -460,16 +460,20 @@ elif section == "📊 Expense Analytics":
     # 🧾 Other Expenses – Sub-Category Breakdown
     # =================================================
     st.subheader("🧾 Other Expenses Breakdown")
-
-    other_df = df[
-        (df["Category"] == "Others") &
-        (df["Sub-Category"].notna()) &
-        (df["Sub-Category"].str.strip() != "")
-    ]
-
+    
+    other_df = df[df["Category"] == "Others"].copy()
+    
     if other_df.empty:
         st.info("No 'Other' expenses recorded yet.")
     else:
+        # 🔑 Normalize missing sub-categories
+        other_df["Sub-Category"] = (
+            other_df["Sub-Category"]
+            .fillna("")
+            .str.strip()
+            .replace("", "Miscellaneous Expenses")
+        )
+    
         other_summary = (
             other_df
             .groupby("Sub-Category", as_index=False)["Expense Amount"]
@@ -477,10 +481,11 @@ elif section == "📊 Expense Analytics":
             .sort_values("Expense Amount", ascending=False)
             .reset_index(drop=True)
         )
-
+    
         st.dataframe(other_summary, use_container_width=True)
-
+    
     st.markdown("---")
+
 
     # =================================================
     # 2️⃣ Expense Trend
@@ -893,6 +898,7 @@ elif section == "📊 Sales Analytics":
     ]].sort_values(["Date", "Store"]).reset_index(drop=True)
 
     st.dataframe(final_df, use_container_width=True)
+
 
 
 
