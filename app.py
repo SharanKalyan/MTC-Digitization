@@ -143,7 +143,19 @@ def upsert_daily_balance(
     else:
         opening_balance = 0.0
 
-    total_sales = float(de_
+    total_sales = float(delta_sales)
+    total_expense = float(delta_expense)
+    closing_balance = opening_balance + total_sales - total_expense
+
+    balance_sheet.append_row([
+        date_str,
+        opening_balance,
+        total_sales,
+        total_expense,
+        closing_balance,
+        now_str
+    ])
+
 
 
 # -------------------------------------------------
@@ -967,6 +979,7 @@ elif section == "📊 Sales Analytics":
     ]].sort_values(["Date", "Store"]).reset_index(drop=True)
 
     st.dataframe(final_df, use_container_width=True)
+
 
 
 
