@@ -291,6 +291,7 @@ elif section == "🧾 Expense Entry":
             pay = st.selectbox("Payment", ["Cash","UPI","Cheque"], key=f"pay_{cat}")
             by = st.selectbox("Expense By", ["RK","AR","YS"], key=f"by_{cat}")
             expense_rows.append((sel, cat, sub, amt, pay, by))
+            st.markdown("---")
 
         submit = st.form_submit_button("✅ Submit")
 
@@ -1010,6 +1011,7 @@ elif section == "📊 Sales Analytics":
     ]].sort_values(["Date", "Store"]).reset_index(drop=True)
 
     st.dataframe(final_df, use_container_width=True)
+
 
 
 
