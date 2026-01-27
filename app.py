@@ -281,6 +281,7 @@ elif section == "🧾 Expense Entry":
         exp_date = st.date_input("Expense Date", value=today_date)
         exp_time = st.time_input("Expense Time", value=now.time().replace(second=0))
         exp_dt = datetime.combine(exp_date, exp_time).strftime(DATETIME_FMT)
+        st.markdown("---")
 
         expense_rows = []
 
@@ -1011,6 +1012,7 @@ elif section == "📊 Sales Analytics":
     ]].sort_values(["Date", "Store"]).reset_index(drop=True)
 
     st.dataframe(final_df, use_container_width=True)
+
 
 
 
