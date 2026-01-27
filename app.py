@@ -777,22 +777,25 @@ elif section == "📈 Attendance Analytics":
     st.markdown("---")
 
     # =================================================
-    # 3️⃣ Day-wise Absentees by Shift
+    # 3️⃣ Day-wise Absentees by Shift (CURRENT MONTH ONLY)
     # =================================================
-    st.subheader("📋 Day-wise Absentees by Shift")
-
+    st.subheader("📋 Day-wise Absentees by Shift (Current Month)")
+    
+    # Filter to current month ONLY
+    month_df = df[
+        (df["year"] == current_year) &
+        (df["month"] == current_month)
+    ]
+    
     rows = []
-
-    for day, day_df in df.groupby("date_only"):
-
+    
+    for day, day_df in month_df.groupby("date_only"):
+    
+        # Morning absentees
         morning_absent = day_df.loc[
             day_df["Morning"] == "✖", "Employee Name"
         ].tolist()
-
-        night_absent = day_df.loc[
-            day_df["Night"] == "✖", "Employee Name"
-        ].tolist()
-
+    
         if morning_absent:
             rows.append({
                 "Date": day.strftime(DATE_FMT),
@@ -800,7 +803,12 @@ elif section == "📈 Attendance Analytics":
                 "Absent Count": len(morning_absent),
                 "Absent Employees": ", ".join(morning_absent)
             })
-
+    
+        # Night absentees
+        night_absent = day_df.loc[
+            day_df["Night"] == "✖", "Employee Name"
+        ].tolist()
+    
         if night_absent:
             rows.append({
                 "Date": day.strftime(DATE_FMT),
@@ -808,7 +816,7 @@ elif section == "📈 Attendance Analytics":
                 "Absent Count": len(night_absent),
                 "Absent Employees": ", ".join(night_absent)
             })
-
+    
     if rows:
         abs_df = (
             pd.DataFrame(rows)
@@ -817,7 +825,7 @@ elif section == "📈 Attendance Analytics":
         )
         st.dataframe(abs_df, use_container_width=True)
     else:
-        st.info("No absentees recorded yet.")
+        st.info("No absentees recorded for the current month.")
 
 
 # =================================================
@@ -1012,6 +1020,7 @@ elif section == "📊 Sales Analytics":
     ]].sort_values(["Date", "Store"]).reset_index(drop=True)
 
     st.dataframe(final_df, use_container_width=True)
+
 
 
 
