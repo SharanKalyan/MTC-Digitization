@@ -21,7 +21,7 @@ st.markdown(
     <style>
     /* Make the main section selectbox stand out */
     div[data-baseweb="select"] {
-        background-color: rgba(255, 255, 255, 0.85);
+        background-color: rgba(255, 255, 0, 0.85);
         border-radius: 8px;
         border: 1px solid #e0e0e0;
         box-shadow: 0 2px 6px rgba(0,0,0,0.05);
@@ -1033,6 +1033,7 @@ elif section == "📊 Sales Analytics":
     ]].sort_values(["Date", "Store"]).reset_index(drop=True)
 
     st.dataframe(final_df, use_container_width=True)
+
 
 
 
