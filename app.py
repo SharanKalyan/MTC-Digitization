@@ -16,6 +16,27 @@ DATETIME_FMT = "%d/%m/%Y %H:%M"
 # -------------------------------------------------
 st.set_page_config(page_title="Monisha Tiffin Center", layout="centered")
 
+st.markdown(
+    """
+    <style>
+    /* Make the main section selectbox stand out */
+    div[data-baseweb="select"] {
+        background-color: rgba(255, 255, 255, 0.85);
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    /* Slight padding inside dropdown */
+    div[data-baseweb="select"] > div {
+        padding: 6px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+
 # -------------------------------------------------
 # PIN Protection
 # -------------------------------------------------
@@ -1012,6 +1033,7 @@ elif section == "📊 Sales Analytics":
     ]].sort_values(["Date", "Store"]).reset_index(drop=True)
 
     st.dataframe(final_df, use_container_width=True)
+
 
 
 
