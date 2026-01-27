@@ -1,4 +1,4 @@
-# Sri Monisha Tiffin Center – SMB Digitalization & Analytics System
+# Sri Monisha Tiffin Center – Restaurant (SMB) Digitalization & Analytics System
 
 ## Project Context
 
