@@ -278,24 +278,74 @@ elif section == "🧾 Expense Entry":
     ]
 
     with st.form("expense_form"):
-        exp_date = st.date_input("Expense Date", value=today_date)
-        exp_time = st.time_input("Expense Time", value=now.time().replace(second=0))
+        # ---------- Date & Time ----------
+        col1, col2 = st.columns(2)
+        with col1:
+            exp_date = st.date_input("Expense Date", value=today_date)
+        with col2:
+            exp_time = st.time_input(
+                "Expense Time",
+                value=now.time().replace(second=0)
+            )
+
         exp_dt = datetime.combine(exp_date, exp_time).strftime(DATETIME_FMT)
+
+        st.markdown("---")
 
         expense_rows = []
 
         for cat in EXPENSE_CATEGORIES:
-            sel = st.checkbox(cat, key=f"sel_{cat}")
-            sub = st.text_input("Sub-category", key=f"sub_{cat}")
-            amt = st.number_input("Amount", min_value=0.0, key=f"amt_{cat}")
-            pay = st.selectbox("Payment", ["Cash","UPI","Cheque"], key=f"pay_{cat}")
-            by = st.selectbox("Expense By", ["RK","AR","YS"], key=f"by_{cat}")
+
+            # ---------- Row 1: Checkbox | Category | Sub-category ----------
+            c1, c2, c3 = st.columns([0.6, 2, 3])
+
+            with c1:
+                sel = st.checkbox("", key=f"sel_{cat}")
+
+            with c2:
+                st.markdown(f"**{cat}**")
+
+            with c3:
+                sub = st.text_input(
+                    "Sub-category",
+                    key=f"sub_{cat}",
+                    label_visibility="collapsed"
+                )
+
+            # ---------- Row 2: Amount ----------
+            amt = st.number_input(
+                "Amount",
+                min_value=0.0,
+                step=1.0,
+                key=f"amt_{cat}"
+            )
+
+            # ---------- Row 3: Payment | Expense By ----------
+            c4, c5 = st.columns(2)
+
+            with c4:
+                pay = st.selectbox(
+                    "Payment",
+                    ["Cash", "UPI", "Cheque"],
+                    key=f"pay_{cat}"
+                )
+
+            with c5:
+                by = st.selectbox(
+                    "Expense By",
+                    ["RK", "AR", "YS"],
+                    key=f"by_{cat}"
+                )
+
             expense_rows.append((sel, cat, sub, amt, pay, by))
-            
+
             st.markdown("---")
 
         submit = st.form_submit_button("✅ Submit")
 
+    # =================================================
+    # SAVE
+    # =================================================
     if submit:
         count = 0
         total_expense_added = 0.0
@@ -303,11 +353,16 @@ elif section == "🧾 Expense Entry":
         for sel, cat, sub, amt, pay, by in expense_rows:
             if sel and amt > 0:
                 expense_sheet.append_row([
-                    exp_dt, cat, sub, amt, pay, by
+                    exp_dt,
+                    cat,
+                    sub,
+                    float(amt),
+                    pay,
+                    by
                 ])
                 total_expense_added += float(amt)
                 count += 1
-    
+
         if total_expense_added > 0:
             upsert_daily_balance(
                 balance_sheet=balance_sheet,
@@ -315,9 +370,12 @@ elif section == "🧾 Expense Entry":
                 delta_expense=total_expense_added,
                 now_str=now_str
             )
-    
-        st.success(f"{count} expense(s) recorded" if count else "No expenses submitted")
 
+        st.success(
+            f"{count} expense(s) recorded"
+            if count else
+            "No expenses submitted"
+        )
 
 # =================================================
 # 💰 SALES ENTRY (BULK – FIXED STRUCTURE)
@@ -1012,6 +1070,7 @@ elif section == "📊 Sales Analytics":
     ]].sort_values(["Date", "Store"]).reset_index(drop=True)
 
     st.dataframe(final_df, use_container_width=True)
+
 
 
 
