@@ -287,8 +287,8 @@ elif section == "🧾 Expense Entry":
 
         for cat in EXPENSE_CATEGORIES:
             sel = st.checkbox(cat, key=f"sel_{cat}")
-            sub = st.text_input("Sub-category", key=f"sub_{cat}")
-            amt = st.number_input("Amount", min_value=0.0, key=f"amt_{cat}")
+            sub = st.text_input("Sub-category", key=f"sub_{cat}",placeholder="Sub-Category")
+            amt = st.number_input("Amount", min_value=0, key=f"amt_{cat}")
             pay = st.selectbox("Payment", ["Cash","UPI","Cheque"], key=f"pay_{cat}")
             by = st.selectbox("Expense By", ["RK","AR","YS"], key=f"by_{cat}")
             expense_rows.append((sel, cat, sub, amt, pay, by))
@@ -342,13 +342,13 @@ elif section == "💰 Sales Entry":
         col1, col2 = st.columns(2)
         big_morning = col1.number_input(
             "Morning Sales",
-            min_value=0.0,
+            min_value=0,
             step=100.0,
             key="big_morning"
         )
         big_night = col2.number_input(
             "Night Sales",
-            min_value=0.0,
+            min_value=0,
             step=100.0,
             key="big_night"
         )
@@ -359,7 +359,7 @@ elif section == "💰 Sales Entry":
         st.markdown("**Main Store (Full Day)**")
         main_full = st.number_input(
             "Main Store Sales",
-            min_value=0.0,
+            min_value=0,
             step=100.0,
             key="main_full"
         )
@@ -370,7 +370,7 @@ elif section == "💰 Sales Entry":
         st.markdown("**Orders (Full Day)**")
         orders_full = st.number_input(
             "Orders Sales",
-            min_value=0.0,
+            min_value=0,
             step=100.0,
             key="orders_full"
         )
@@ -1012,6 +1012,7 @@ elif section == "📊 Sales Analytics":
     ]].sort_values(["Date", "Store"]).reset_index(drop=True)
 
     st.dataframe(final_df, use_container_width=True)
+
 
 
 
