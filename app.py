@@ -1017,9 +1017,10 @@ elif section == "📊 Sales Analytics":
         "Total Sales",
         "Total Expense",
         "Profit / Loss"
-    ]].sort_values(["Date", "Store"]).reset_index(drop=True)
+    ]].sort_values(["Date", "Store"],ascending=False).reset_index(drop=True)
 
     st.dataframe(final_df, use_container_width=True)
+
 
 
 
