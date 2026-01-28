@@ -820,7 +820,7 @@ elif section == "📈 Attendance Analytics":
     if rows:
         abs_df = (
             pd.DataFrame(rows)
-            .sort_values(["Date", "Shift"],ascending=[True,False])
+            .sort_values(["Date", "Shift"],ascending=False)
             .reset_index(drop=True)
         )
         st.dataframe(abs_df, use_container_width=True)
@@ -1020,6 +1020,7 @@ elif section == "📊 Sales Analytics":
     ]].sort_values(["Date", "Store"]).reset_index(drop=True)
 
     st.dataframe(final_df, use_container_width=True)
+
 
 
 
