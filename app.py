@@ -617,7 +617,7 @@ elif section == "📊 Expense Analytics":
             df.groupby("date", as_index=False)["Expense Amount"]
             .sum()
             .rename(columns={"date": "Date"})
-            .sort_values("Date")
+            .sort_values("Date",ascending=False)
             .reset_index(drop=True)
         )
 
@@ -630,7 +630,7 @@ elif section == "📊 Expense Analytics":
             df.groupby("week", as_index=False)["Expense Amount"]
             .sum()
             .rename(columns={"week": "Week"})
-            .sort_values("Week")
+            .sort_values("Week",ascending=False)
             .reset_index(drop=True)
         )
 
@@ -639,7 +639,7 @@ elif section == "📊 Expense Analytics":
             df.groupby(["year", "month"], as_index=False)["Expense Amount"]
             .sum()
             .rename(columns={"month": "Month"})
-            .sort_values(["year", "Month"])
+            .sort_values(["year", "Month"],ascending=False)
             .reset_index(drop=True)
         )
 
@@ -1020,6 +1020,7 @@ elif section == "📊 Sales Analytics":
     ]].sort_values(["Date", "Store"]).reset_index(drop=True)
 
     st.dataframe(final_df, use_container_width=True)
+
 
 
 
