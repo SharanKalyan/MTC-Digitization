@@ -602,49 +602,59 @@ elif section == "📊 Expense Analytics":
 
 
     # =================================================
-    # 2️⃣ Expense Trend
+    # 2️⃣ Expense Trend (CURRENT MONTH ONLY)
     # =================================================
-    st.subheader("📈 Expense Trend")
-
+    st.subheader("📈 Expense Trend (Current Month)")
+    
     trend = st.radio(
         "Trend Type",
         ["Daily", "Weekly", "Monthly"],
         horizontal=True
     )
-
+    
+    # Filter once — reuse everywhere
+    month_df = df[
+        (df["year"] == current_year) &
+        (df["month"] == current_month)
+    ]
+    
     if trend == "Daily":
+        # ✅ Daily expenses — CURRENT MONTH ONLY
         trend_df = (
-            df.groupby("date", as_index=False)["Expense Amount"]
+            month_df
+            .groupby("date", as_index=False)["Expense Amount"]
             .sum()
             .rename(columns={"date": "Date"})
-            .sort_values("Date",ascending=False)
+            .sort_values("Date", ascending=False)
             .reset_index(drop=True)
         )
-
+    
         trend_df["Date"] = trend_df["Date"].apply(
             lambda x: x.strftime(DATE_FMT)
         )
-
+    
     elif trend == "Weekly":
+        # ✅ Weekly expenses — CURRENT MONTH ONLY (ISO week)
         trend_df = (
-            df.groupby("week", as_index=False)["Expense Amount"]
+            month_df
+            .groupby("week", as_index=False)["Expense Amount"]
             .sum()
-            .rename(columns={"week": "Week"})
-            .sort_values("Week",ascending=False)
+            .rename(columns={"week": "Week (ISO)"})
+            .sort_values("Week (ISO)", ascending=False)
             .reset_index(drop=True)
         )
-
+    
     else:  # Monthly
+        # ✅ Monthly trend — YEAR-WISE (this one is okay to be broader)
         trend_df = (
             df.groupby(["year", "month"], as_index=False)["Expense Amount"]
             .sum()
             .rename(columns={"month": "Month"})
-            .sort_values(["year", "Month"],ascending=False)
+            .sort_values(["year", "Month"], ascending=False)
             .reset_index(drop=True)
         )
-
+    
     st.dataframe(trend_df, use_container_width=True)
-
     st.markdown("---")
 
     # =================================================
@@ -1020,6 +1030,7 @@ elif section == "📊 Sales Analytics":
     ]].sort_values(["Date", "Store"],ascending=False).reset_index(drop=True)
 
     st.dataframe(final_df, use_container_width=True)
+
 
 
 
